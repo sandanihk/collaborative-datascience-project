@@ -13,6 +13,324 @@ knitr:
 ```{r}
 #| label: setup
 library(DFATools)
+library(tidyverse)
+library(caret)
+library(corrplot)
+library(knitr)
+library(mda)
 ```
 
-# Introduction
+# Background
+Music genres are often defined by patterns in audio characteristics such as energy, rhythm, and acoustic properties. However, with hundreds of genres, classification becomes complex.
+
+Discriminant Function Analysis (DFA) is a statistical method that identifies combinations of features that best separate predefined groups. It is particularly useful when the goal is classification and interpretation of group differences.
+
+In this analysis, we apply DFA to determine whether a small set of audio features can distinguish between broad genre categories. We explore three models: Linear Discriminant Analysis (LDA), Quadratic Discriminant Analysis (QDA), Flexible Discriminant Analysis (FDA).
+
+# Research Questions:
+Can we accurately classify music into broad genre groups using audio features?
+Do genre groups differ significantly in their audio characteristics?
+Which features are most important for distinguishing genres?
+
+# Data Description
+The dataset contains Spotify track features such as: Danceability, Energy, Loudness, Tempo, Acousticness. There are 114 genres in the dataset.
+
+# Preliminaries
+Go to https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data, download train.csv dataset.
+
+Install and load these packages in R: {tiduverse}, {MASS}, {caret}, {corrplot}, {knitr}, {mda}
+
+# Discriminant Analysis Methods
+
+We consider three related classification methods that differ in their assumptions and flexibility:
+
+Linear Discriminant Analysis (LDA) assumes that all classes share a common covariance structure and produces linear decision boundaries. This makes the model simple, stable, and interpretable.
+
+Quadratic Discriminant Analysis (QDA) relaxes this assumption by allowing each class to have its own covariance matrix, resulting in nonlinear (quadratic) decision boundaries.
+
+Flexible Discriminant Analysis (FDA) extends these ideas by incorporating nonlinear transformations, enabling more complex decision boundaries at the cost of reduced interpretability.
+
+These methods represent a spectrum from simplicity (LDA) to flexibility (FDA), allowing us to evaluate trade-offs between interpretability and predictive performance.
+
+
+# 1. Feature Selection
+
+We select audio features that are expected to capture meaningful differences between musical genres: Energy reflects intensity and loudness, Acousticness distinguishes organic versus electronic sound, Speechiness captures spoken-word content, Danceability reflects rhythmic structure, Instrumentalness indicates the absence of vocals. These features are widely used in music information retrieval and provide complementary information for distinguishing between genre groups.
+
+```{r}
+audio_features <- c(
+  "energy",
+  "acousticness",
+  "speechiness",
+  "danceability",
+  "instrumentalness"
+)
+```
+These features represent different musical properties (e.g., energy intensity, acoustic vs electronic sound, rhythm). Selecting a focused set reduces noise and improves model interpretability.
+
+# 2. Genre grouping
+
+Genres are grouped into broader categories to improve class separability and interpretability. Rock represents high-energy, amplified music, Electronic & Pop** captures rhythm-driven and dance-oriented styles, Acoustic & Traditional includes organic, low-energy genres. This grouping is motivated by shared audio characteristics rather than strict genre labels, allowing the models to learn more coherent patterns.
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/sandanihk/collaborative-datascience-project/refs/heads/main/Spotify%20Tracks%20Genre.csv")
+
+df_grouped <- df %>%
+  filter(track_genre %in% c(
+    "rock","metal","hard-rock","punk","alternative",
+    "pop","hip-hop","dance","house","techno",
+    "acoustic","classical","jazz","folk","blues"
+  )) %>%
+  mutate(
+    genre_group = case_when(
+      track_genre %in% c("rock","metal","hard-rock","punk","alternative") ~ "High_Energy",
+      track_genre %in% c("pop","hip-hop","dance","house","techno") ~ "Contemporary",
+      TRUE ~ "Traditional"
+    )
+  )
+```
+
+Grouping reduces 100+ genres into 3 interpretable categories. This improves model stability and makes DFA assumptions more reasonable.
+
+# 3. Check Group Balance
+
+Ensure that each class has a similar number of observations to avoid biased model training.
+
+```{r}
+df_grouped %>%
+  count(genre_group) %>%
+  arrange(desc(n))
+```
+Each group contains 5,000 observations, indicating a perfectly balanced dataset. This is ideal because classification accuracy will not be toward ant class.
+
+# 4. Build modeling dataset
+
+We construct the final dataset by selecting predictors and the target variable, removing missing values, and converting the outcome to a factor.
+
+```{r}
+df_model <- df_grouped %>%
+  dplyr::select(all_of(audio_features), genre_group) %>%
+  na.omit() 
+
+df_model$genre_group <- as.factor(df_model$genre_group)
+
+kable(as.data.frame(table(df_model$genre_group)))
+glimpse(df_model)
+```
+The dataset contains 15,000 observations evenly distributed across three classes. Converting the outcome to a factor ensures compatibility with classification models.
+
+# 5. Train/Test Split and Feature Scaling
+
+To ensure a consistent and reproducible workflow, we use the `prepare_data()` function from **DFATools** to handle both train/test splitting and feature scaling.
+
+The dataset is split into training (70%) and testing (30%) sets using stratified sampling, preserving the class distribution across genre groups. In addition, all numerical predictors are standardized (centered and scaled) using statistics computed from the training data. The same transformation is then applied to the test data to prevent data leakage and ensure fair model evaluation.
+
+```{r}
+prepared <- prepare_data(
+  data = df_model,
+  target_column_name = "genre_group",
+  training_propotion_size = 0.7,
+  scale = TRUE
+)
+
+train_data <- prepared$training_data
+test_data  <- prepared$test_data
+```
+
+# 6. Correlation analysis
+
+Check for multicollinearity among predictors, which can negatively affect discriminant analysis.
+
+```{r}
+cor_matrix <- cor(train_data %>% dplyr::select(-genre_group))
+
+corrplot(cor_matrix, method = "color", tl.cex = 0.7)
+
+high_corr <- caret::findCorrelation(cor_matrix, cutoff = 0.90)
+
+kable(data.frame(
+  Metric = "Highly correlated predictors removed",
+  Value = length(high_corr)
+))
+```
+
+No highly correlated predictors(cutoff = 0.9) were detected. This indicated that all features provide unique information and can be safely included in the model.
+
+# 7. MANOVA Test
+
+Evaluate whether the three genre groups differ in their combined audio feature profiles.
+
+```{r}
+manova_model <- manova(
+  as.matrix(train_data %>% dplyr::select(-genre_group)) ~ genre_group,
+  data = train_data
+)
+
+summary(manova_model, test = "Wilks")
+```
+
+The MANOVA test is highly significant (p < 2.2e-16), indicating that genre groups differ in their combined audio features. The relatively low Wilks’ Lambda (0.41) suggests substantial separation between groups, supporting the use of discriminant analysis for classification.
+
+# 8. Run LDA model
+
+Linear Discriminant Analysis (LDA) assumes that all classes share a common covariance structure and that observations within each class are approximately normally distributed. The significant MANOVA result indicates that genre groups differ in multivariate feature space, supporting the application of discriminant analysis.
+
+Using the `run_lda_model()` function from **DFATools**, we fit the model and evaluate its performance on a held-out test set:
+
+```{r}
+lda_res <- run_lda_model(train_data, test_data, "genre_group")
+
+lda_res$accuracy
+```
+
+The model achieves approximately 70% accuracy on the test data, indicating that the selected audio features provide strong discriminatory power between genre groups.
+
+LDA constructs two axes (LD1 and LD2) that maximize separation between groups. ~70% for LD1 and 30% on LD2, LD1 was strongly influenced by acousticness (negative weight) and energy (positive weight), LD2 was strongly influenced by danceability and speechiness (negative weight).
+
+# 9. Model Evaluation
+We summarize model performance below:
+
+```{r}
+kable(data.frame(
+  Metric = "Test Accuracy",
+  Value = round(lda_res$accuracy, 4)
+))
+```
+
+# 10. Cross validation
+
+We use leave-one-out cross-validation (LOOCV) to assess model performance on the training data.In LOOCV, the model is trained repeatedly, each time leaving out a single observation as the validation sample. This process is repeated for every observation in the training dataset, resulting in N validation runs (where N is the number of training samples). This approach provides a nearly unbiased estimate of model performance, although it can be computationally intensive.
+
+```{r}
+lda_cv <- MASS::lda(
+  genre_group ~ .,
+  data = train_data,
+  CV = TRUE
+)
+
+lda_cv_acc <- mean(lda_cv$class == train_data$genre_group)
+
+lda_cv_acc
+```
+The LOOCV accuracy is approximately 70%, which is consistent with the test accuracy obtained earlier. This agreement suggests that the model generalizes well and is not overfitting the training data.
+
+# 11. Test performance
+
+The group means reveal clear differences in musical characteristics: Acoustic & Traditional with low energy, Very high acousticness, Lower danceability; Electronic & Pop with Higher danceability, Moderate energy and Lower acousticness; Rock with Highest energy, Lowest acousticness, Lower danceability. These patterns confirm that genre groups differ in meaningful and interpretable ways.
+
+The model achieves approximately 70% accuracy on the test set, which is very close to the cross-validation accuracy (~70%). This consistency suggests that the model generalizes well and is not overfitting.
+
+Importantly, the accuracy is substantially higher than the no-information rate (33%), and the extremely small p-value confirms that the model performs significantly better than random guessing.
+
+# 12. LDA Visualization
+
+```{r}
+lda_res$plot
+```
+LD1 primarily distinguished acoustic and non-acoustic music, LD2 helps separate Rock from Electronic & Pop music. The LDA plot shows clear separation of Acoustic & Traditional from the other genres along LD1, while LD2 helps distinguish Rock from Electronic & Pop. Overlap between Electronic & Pop and Rock explains the observed misclassification patterns and reflects their similar audio characteristics.
+
+# 13. Confusion matrix heatmap
+
+```{r}
+plot_confusion_matrix(lda_res$confusion_matrix)
+```
+The confusion matrix heatmap visually highlights model performance, with darker diagonal cells indicating correct classifications and lighter off-diagonal cells representing errors. The model performs well overall, as shown by strong diagonal dominance. Acoustic & Traditional is clearly separated from other genres, while the largest misclassifications occur between Electronic & Pop and Rock. This pattern reflects the similarity in their audio feature.
+
+# 14. Feature importance
+```{r}
+lda_coeff <- lda_res$coefficients
+```
+The LDA coefficients indicate that acousticness is the dominant feature driving the primary discriminant (LD1), with a large negative coefficient, while energy contributes positively. This suggests that LD1 primarily separates acoustic music from more energetic, amplified genres.
+
+The second discriminant (LD2) is driven mainly by danceability, with a strong negative coefficient, indicating that it distinguishes dance-oriented genres such as Electronic & Pop from less dance-focused genres like Rock.
+
+Overall, the results show that genre separation is structured along interpretable musical dimensions, with acousticness and energy defining the main axis of variation and danceability providing secondary differentiation.
+
+# 15. QDA model
+Evaluate whether a more flexible model (QDA), which allows different covariance structures for each group, improves classification performance.
+
+```{r}
+qda_res <- run_qda_model(train_data, test_data, "genre_group")
+
+qda_res$accuracy
+plot_confusion_matrix(qda_res$confusion_matrix)
+```
+The QDA model achieves about 65% accuracy, which is lower than LDA (~70%). This suggests that allowing more flexibility does not improve performance for this dataset.
+
+# 16. FDA
+Apply Flexible Discriminant Analysis (FDA) to capture potential non-linear relationships between features and genre groups.
+
+```{r}
+fda_res <- run_fda_model(train_data, test_data, "genre_group")
+
+fda_res$accuracy
+plot_confusion_matrix(fda_res$confusion_matrix)
+```
+
+The FDA model achieves approximately 70% accuracy, similar to LDA. This indicates that adding non-linear flexibility does not significantly improve performance, suggesting that the relationship between features and genres is largely linear.
+
+# 17. Model Comparison
+Compare the performance of LDA, QDA, and FDA to determine which model best answers our research question.
+
+```{r}
+kable(data.frame(
+  Model = c("LDA","QDA","FDA"),
+  Accuracy = c(
+    round(lda_res$accuracy,4),
+    round(qda_res$accuracy,4),
+    round(fda_res$accuracy,4)
+  )
+))
+```
+
+The results highlight differences in model flexibility: LDA provides stable and interpretable results but may struggle with overlapping classes. QDA improves flexibility by modeling class-specific covariance, which can better capture nonlinear boundaries. FDA allows even more complex relationships but may introduce overfitting and reduce interpretability.In this analysis, increased flexibility does not always guarantee improved performance, emphasizing the importance of balancing model complexity and generalization.
+
+# Summary
+Music genres can be classified with moderate accuracy (~70%) using audio features, indicating meaningful but imperfect separation between groups. Statistical tests confirm that genre groups differ significantly in their audio characteristics, supporting the validity of classification. The most important features driving these differences are acousticness, energy, and danceability, which capture key musical properties that distinguish between traditional, high-energy, and contemporary genres.
+
+# Limitations
+
+Several limitations should be noted: 1. Genre labels are inherently subjective and may overlap in feature space 2. Some classes share similar audio characteristics, reducing separability 3. LDA assumptions (e.g., equal covariance) may not fully hold. More flexible models (QDA, FDA) may overfit the dataFuture work could explore additional features, alternative grouping strategies, or more advanced machine learning models.
+
+# Using the Package
+The functions developed in this package can be used to perform discriminant analysis on any dataset with a categorical outcome variable. Here is an example workflow:
+
+```{r}
+library(DFATools)
+
+prepared <- prepare_data(
+  df_model,
+  target_column_name = "genre_group",
+  training_propotion_size = 0.7
+)
+
+train_data <- prepared$training_data
+test_data  <- prepared$test_data
+
+lda_res <- run_lda_model(train_data, test_data, "genre_group")
+qda_res <- run_qda_model(train_data, test_data, "genre_group")
+fda_res <- run_fda_model(train_data, test_data, "genre_group")
+
+kable(data.frame(
+  Model = c("LDA","QDA","FDA"),
+  Accuracy = c(
+    lda_res$accuracy,
+    qda_res$accuracy,
+    fda_res$accuracy
+  )
+))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
