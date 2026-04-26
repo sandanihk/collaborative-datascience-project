@@ -1,232 +1,295 @@
-#' Prepare Data for Discriminant Analysis
-#'
-#' Splits a dataset into training and testing sets and optionally standardizes predictors.
-#'
-#' @param data A data frame.
-#' @param target Character string giving the name of the categorical outcome variable.
-#' @param train_prop Proportion of data used for training. Default is 0.7.
-#' @param scale Logical. If TRUE, numeric predictors are centered and scaled.
-#' @param seed Random seed for reproducibility.
-#'
-#' @return A list containing train_data, test_data, and preprocess_obj.
+#' @title Preparing data for Discriminant Function Analysis
+#' @description This function splits a dataset into training and testing data, and also optionally standardizes the predictor variables, when the scaling is used
+#' ,the centering and the scaling parameters are estimated from the training data and then aopplied to both training and test data after splitting to avoid data leakage.
+#' @param data a data frame
+#' @param target_column_name A character string stating the categorical response variable name
+#' @param training_propotion_size The proportion of data used for training.
+#' @param scale A logical value (TRUE or FALSE); if TRUE, the numeric predictors are centered and scaled
+#' @param seed A random seed for reproducibility of results
+#' @keywords discriminant-function-analysis
+#' @return A list containing:
+#' \item{training_data}{The processed training data.}
+#' \item{test_data}{The processed test data.}
+#' \item{preprocess_object}{The preprocessing object used for scaling. NULL if scale = FALSE.}
 #' @export
+#' @examples
+#' prepare_data(data = iris, target_column_name = "Species", training_propotion_size = 0.8)
+#' prepare_data(data = iris, target_column_name = "Species",training_propotion_size = 0.8, scale = FALSE)
 
-#first function - For preparing data for discriminant analysis
+prepare_data <- function(data, target_column_name, training_propotion_size, scale = TRUE, seed = 123) {
 
-prepare_disc_data <- function(data, target, train_prop, scale = TRUE, seed = 123) {
   set.seed(seed)
 
-  data <- data |>
-    tidyr::drop_na()
+  # First removing missing values in the data
+  data <- tidyr::drop_na(data)
 
-  data[[target]] <- as.factor(data[[target]])
+  # Keeping the target variable as a factor
+  data[[target_column_name]] <- as.factor(data[[target_column_name]])
 
+  # Then splitting the dataset to Train and test sets
   train_index <- caret::createDataPartition(
-    data[[target]],
-    p = train_prop,
+    data[[target_column_name]],
+    p = training_propotion_size,
     list = FALSE
   )
 
-  train_raw <- data[train_index, ]
-  test_raw  <- data[-train_index, ]
+  training_set_raw <- data[train_index, ]
+  test_set_raw  <- data[-train_index, ]
 
-  train_raw[[target]] <- droplevels(train_raw[[target]])
-  test_raw[[target]]  <- droplevels(test_raw[[target]])
+  # After that cleaning the unused factor levels in the target variable for both train and test sets
+
+  training_set_raw[[target_column_name]] <- droplevels(training_set_raw[[target_column_name]])
+  test_set_raw[[target_column_name]]  <- droplevels(test_set_raw[[target_column_name]])
+
+  # Scaling the variable values if the user provided the scale argument is TRUE.
+  # Here, Caret's preProcess function is used to center and scale the numeric predictors based on the training data,
+  # and then apply the same transformations to the test data.
 
   if (scale) {
-    preprocess_obj <- caret::preProcess(
-      train_raw |> dplyr::select(-dplyr::all_of(target)),
+
+    training_predictors <- dplyr::select(
+      training_set_raw,
+      -dplyr::all_of(target_column_name)
+    )
+
+    test_predictors <- dplyr::select(
+      test_set_raw,
+      -dplyr::all_of(target_column_name)
+    )
+
+    preprocess_object <- caret::preProcess(
+      training_predictors,
       method = c("center", "scale")
     )
 
-    train_scaled <- predict(
-      preprocess_obj,
-      train_raw |> dplyr::select(-dplyr::all_of(target))
-    )
+    training_set_scaled <- predict(preprocess_object, training_predictors)
+    test_set_scaled <- predict(preprocess_object, test_predictors)
 
-    test_scaled <- predict(
-      preprocess_obj,
-      test_raw |> dplyr::select(-dplyr::all_of(target))
-    )
+    final_training_data <- training_set_scaled
+    final_training_data[[target_column_name]] <- training_set_raw[[target_column_name]]
 
-    train_data <- train_scaled
-    train_data[[target]] <- train_raw[[target]]
+    final_test_data <- test_set_scaled
+    final_test_data[[target_column_name]] <- test_set_raw[[target_column_name]]
 
-    test_data <- test_scaled
-    test_data[[target]] <- test_raw[[target]]
   } else {
-    preprocess_obj <- NULL
-    train_data <- train_raw
-    test_data <- test_raw
+    final_training_data <- training_set_raw
+    final_test_data  <- test_set_raw
+    preprocess_object <- NULL
   }
 
   return(list(
-    train_data = train_data,
-    test_data = test_data,
-    preprocess_obj = preprocess_obj
+    training_data = final_training_data,
+    test_data = final_test_data,
+    preprocess_object = preprocess_object
   ))
 }
 
-#' Run Linear Discriminant Analysis with Visualization
-#'
-#' Fits an LDA model, evaluates it on test data, and generates a 2D visualization
-#' of the first two linear discriminants (LD1 and LD2).
-#'
-#' @param train_data A data frame containing training data.
-#' @param test_data A data frame containing test data.
-#' @param target A character string specifying the target (categorical) variable name.
-#'
+#' @title Running a Linear Discriminant Analysis (LDA) with visualization
+#' @description This function fits an LDA model, evaluates its performance on test data, and creates an LD1 vs. LD2 visualization when at least two discriminant
+#' axes are available
+#' @param training_data a data frame containing the training data
+#' @param test_data a data frame containing the test data
+#' @param target_column_name a character string specifying the categorical response variable name
+#' @keywords lda, visualization
 #' @return A list containing:
-#' \item{model}{The fitted LDA model}
-#' \item{predictions}{Predicted class labels for test data}
-#' \item{confusion_matrix}{Confusion matrix object}
-#' \item{accuracy}{Test set accuracy}
-#' \item{coefficients}{LDA scaling coefficients}
-#' \item{plot}{ggplot object of LD1 vs LD2}
-#'
-#' @examples
-#' result <- run_lda_model(train_data, test_data, "genre_group")
-#' result$accuracy
-#' result$plot
-#'
+#' \item{model}{The fitted LDA model.}
+#' \item{predictions}{The prediction object returned by predict()}
+#' \item{confusion_matrix}{A caret confusion matrix object}
+#' \item{accuracy}{The test set accuracy}
+#' \item{coefficients}{The LDA scaling coefficients}
+#' \item{plot}{An LD1 vs. LD2 ggplot object if available. NULL for two-class problems}
 #' @export
+#' @examples
+#' prepared <- prepare_data(iris, "Species", training_propotion_size=0.7)
+#' lda_result <- run_lda_model(
+#'   training_data = prepared$training_data,
+#'   test_data = prepared$test_data,
+#'   target_column_name = "Species"
+#' )
+#' lda_result$accuracy
+#' lda_result$plot
 
-# Running LDA model with visualization of LD1 vs LD2
+run_lda_model <- function(training_data, test_data, target_column_name) {
 
-run_lda_model <- function(train_data, test_data, target) {
+  # Creating the formula for the model
+  formula <- stats::as.formula(paste(target_column_name, "~ ."))
 
-  # Create formula
-  formula <- stats::as.formula(paste(target, "~ ."))
-
-  # Fit model
-  model <- MASS::lda(formula, data = train_data)
+  # Fitting the LDA model
+  model <- MASS::lda(formula, data = training_data)
 
   # Predict on test data
-  pred <- predict(model, newdata = test_data)
+  predictions <- predict(model, newdata = test_data)
 
-  # Confusion matrix
-  conf <- caret::confusionMatrix(
-    pred$class,
-    test_data[[target]]
+  # Accuracy evaluation using confusion matrix
+
+  confusion_matrix <- caret::confusionMatrix(
+    predictions$class,
+    test_data[[target_column_name]]
   )
 
-  # Accuracy
-  acc <- conf$overall["Accuracy"]
 
-  # -----------------------------
-  # LDA Visualization (LD1 vs LD2)
-  # -----------------------------
+  accuracy <- confusion_matrix$overall["Accuracy"]
 
-  lda_values <- predict(model, newdata = train_data)
+  # Visualization
 
+  # We can create the LDA plot if LD1 and LD2 both exist
+  lda_values <- predict(model, newdata = training_data)
   lda_df <- as.data.frame(lda_values$x)
-  lda_df[[target]] <- train_data[[target]]
+  lda_df[[target_column_name]] <- training_data[[target_column_name]]
 
-  plot <- ggplot2::ggplot(
-    lda_df,
-    ggplot2::aes(x = LD1, y = LD2, color = .data[[target]])
-  ) +
-    ggplot2::geom_point(alpha = 0.6, size = 0.8) +
-    ggplot2::theme_minimal() +
-    ggplot2::labs(
-      title = "LDA Visualization (LD1 vs LD2)",
-      x = "Linear Discriminant 1",
-      y = "Linear Discriminant 2",
-      color = target
-    )
+  if (ncol(lda_values$x) >= 2) {
 
-  # Return all outputs
+    plot <- ggplot2::ggplot(
+      lda_df,
+      ggplot2::aes(x = LD1, y = LD2, color = .data[[target_column_name]])
+    ) +
+      ggplot2::geom_point(alpha = 0.6, size = 0.8) +
+      ggplot2::theme_minimal() +
+      ggplot2::labs(
+        title = "LDA Visualization (LD1 vs LD2)",
+        x = "Linear Discriminant 1",
+        y = "Linear Discriminant 2",
+        color = target_column_name
+      )
+
+  } else {
+    plot <- NULL
+  }
+
   return(list(
     model = model,
-    predictions = pred,
-    confusion_matrix = conf,
-    accuracy = acc,
+    predictions = predictions,
+    confusion_matrix = confusion_matrix,
+    accuracy = accuracy,
     coefficients = model$scaling,
     plot = plot
   ))
 }
 
 
-#' Run Quadratic Discriminant Analysis
-#'
-#' Fits a QDA model and evaluates it on test data.
-#'
-#' @param train_data Training data frame.
-#' @param test_data Test data frame.
-#' @param target Character string giving the outcome variable.
-#'
-#' @return A list containing model, predictions, confusion matrix, and accuracy.
+#' @title Running a Quadratic Discriminant Analysis (QDA)
+#' @description This function fits a QDA model and evaluates its classification performance on the test data.
+#' Unlike LDA, QDA allows each class to have its own
+#' covariance structure, which permits more flexible decision boundaries.
+#' @param training_data a data frame containing the training data
+#' @param test_data a data frame containing the test data
+#' @param target_column_name a character string defining the categorical response variable
+#' @keywords qda
+#' @return A list containing:
+#' \item{model}{The fitted QDA model}
+#' \item{predictions}{The prediction object returned by predict()}
+#' \item{confusion_matrix}{A caret confusion matrix object}
+#' \item{accuracy}{The test set accuracy}
 #' @export
+#' @examples
+#' prepared <- prepare_data(iris, "Species", training_propotion_size=0.7 )
+#' qda_result <- run_qda_model(
+#'   training_data = prepared$training_data,
+#'   test_data = prepared$test_data,
+#'   target_column_name = "Species"
+#' )
+#' qda_result$accuracy
 
-# 3rd function for running QDA model
+run_qda_model <- function(training_data, test_data, target_column_name) {
 
-run_qda_model <- function(train_data, test_data, target) {
-  formula <- stats::as.formula(paste(target, "~ ."))
+  # Creating the formula for the model
+  formula <- stats::as.formula(paste(target_column_name, "~ ."))
 
-  model <- MASS::qda(formula, data = train_data)
+  # Fitting the QDA model
+  model <- MASS::qda(formula, data = training_data)
 
-  pred <- predict(model, newdata = test_data)
+  # Predict on test data
+  predictions <- predict(model, newdata = test_data)
 
-  conf <- caret::confusionMatrix(
-    pred$class,
-    test_data[[target]]
+  # Accuracy evaluation using confusion matrix
+
+  confusion_matrix <- caret::confusionMatrix(
+    predictions$class,
+    test_data[[target_column_name]]
   )
+  accuracy <- confusion_matrix$overall["Accuracy"]
 
   return(list(
     model = model,
-    predictions = pred,
-    confusion_matrix = conf,
-    accuracy = conf$overall["Accuracy"]
+    predictions = predictions,
+    confusion_matrix = confusion_matrix,
+    accuracy = accuracy
   ))
 }
 
-#' Run Flexible Discriminant Analysis
-#'
-#' Fits an FDA model and evaluates it on test data.
-#'
-#' @param train_data Training data frame.
-#' @param test_data Test data frame.
-#' @param target Character string giving the outcome variable.
-#'
-#' @return A list containing model, predictions, confusion matrix, and accuracy.
+#' @title Running a Flexible Discriminant Analysis (FDA)
+#' @description
+#' #' Fits a Flexible Discriminant Analysis model and evaluates its classification
+#' performance on test data. FDA is a more flexible extension of discriminant
+#' analysis that can model more complex relationships between predictors and
+#' class membership
+#' @param training_data a data frame containing the training data
+#' @param test_data a data frame containing the test data
+#' @param target_column_name a character string of the categorical response variable name
+#' @keywords fda
+#' @return A list containing:
+#' \item{model}{The fitted FDA model.}
+#' \item{predictions}{The predicted class labels.}
+#' \item{confusion_matrix}{A caret confusion matrix object.}
+#' \item{accuracy}{The test set accuracy.}
 #' @export
+#' @examples
+#' prepared <- prepare_data(iris, "Species", training_propotion_size=0.7)
+#' fda_result <- run_fda_model(
+#'   training_data = prepared$training_data,
+#'   test_data = prepared$test_data,
+#'   target_column_name = "Species"
+#' )
+#' fda_result$accuracy
 
-# 4th function for running FDA model
+run_fda_model <- function(training_data, test_data, target_column_name) {
 
-run_fda_model <- function(train_data, test_data, target) {
-  formula <- stats::as.formula(paste(target, "~ ."))
+  # Creating the formula for the model
+  formula <- stats::as.formula(paste(target_column_name, "~ ."))
 
-  model <- mda::fda(formula, data = train_data)
+  # Fitting the FDA model
+  model <- mda::fda(formula, data = training_data)
 
-  pred <- predict(model, newdata = test_data)
+  # Predict on test data
+  predictions <- predict(model, newdata = test_data)
 
-  conf <- caret::confusionMatrix(
-    as.factor(pred),
-    test_data[[target]]
+  # Accuracy evaluation using confusion matrix
+
+  confusion_matrix <- caret::confusionMatrix(
+    as.factor(predictions),
+    test_data[[target_column_name]]
   )
+  accuracy <- confusion_matrix$overall["Accuracy"]
 
   return(list(
     model = model,
-    predictions = pred,
-    confusion_matrix = conf,
-    accuracy = conf$overall["Accuracy"]
+    predictions = predictions,
+    confusion_matrix = confusion_matrix,
+    accuracy = accuracy
   ))
 }
 
-#' Plot Confusion Matrix Heatmap
-#'
-#' Creates a heatmap from a caret confusionMatrix object.
-#'
-#' @param conf_mat A caret confusionMatrix object.
-#' @param title Plot title.
-#'
-#' @return A ggplot object.
+#' @title Plotting a confusion matrix heatmap
+#' @description
+#' Creates a heatmap visualization from a caret confusionMatrix object.
+#' The diagonal cells represent correct classifications, while off-diagonal
+#' cells represent misclassifications
+#' @param confusion_matrix a caret confusionMatrix object created using caret::confusionMatrix()
+#' @param title the plot title
+#' @keywords heatmap visualization confusion-matrix
+#' @return A ggplot object
 #' @export
+#' @examples
+#' # Example using iris dataset
+#' cm <- caret::confusionMatrix(
+#'   data = iris$Species,
+#'   reference = iris$Species
+#' )
+#'
+#' plot_confusion_matrix(cm, title = "Example Confusion Matrix")
 
-# 5th function for plotting confusion matrix heatmap
-
-plot_confusion_matrix <- function(conf_mat, title = "Confusion Matrix Heatmap") {
-  conf_df <- as.data.frame(conf_mat$table)
+plot_confusion_matrix <- function(confusion_matrix, title = "Confusion Matrix Heatmap") {
+  conf_df <- as.data.frame(confusion_matrix$table)
 
   ggplot2::ggplot(conf_df, ggplot2::aes(x = Reference, y = Prediction, fill = Freq)) +
     ggplot2::geom_tile() +
