@@ -1,2 +1,5 @@
 ^DFATools\.Rproj$
 ^\.Rproj\.user$
+^LICENSE\.md$
+^vignettes/\.quarto$
+^vignettes/*_files$
