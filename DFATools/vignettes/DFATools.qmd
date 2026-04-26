@@ -27,6 +27,18 @@ Discriminant Function Analysis (DFA) is a statistical method that identifies com
 
 In this analysis, we apply DFA to determine whether a small set of audio features can distinguish between broad genre categories. We explore three models: Linear Discriminant Analysis (LDA), Quadratic Discriminant Analysis (QDA), Flexible Discriminant Analysis (FDA).
 
+# Discriminant Analysis Methods
+
+We consider three related classification methods that differ in their assumptions and flexibility:
+
+Linear Discriminant Analysis (LDA) assumes that all classes share a common covariance structure and produces linear decision boundaries. This makes the model simple, stable, and interpretable.
+
+Quadratic Discriminant Analysis (QDA) relaxes this assumption by allowing each class to have its own covariance matrix, resulting in nonlinear (quadratic) decision boundaries.
+
+Flexible Discriminant Analysis (FDA) extends these ideas by incorporating nonlinear transformations, enabling more complex decision boundaries at the cost of reduced interpretability.
+
+These methods represent a spectrum from simplicity (LDA) to flexibility (FDA), allowing us to evaluate trade-offs between interpretability and predictive performance.
+
 # Research Questions:
 Can we accurately classify music into broad genre groups using audio features?
 Do genre groups differ significantly in their audio characteristics?
@@ -39,18 +51,6 @@ The dataset contains Spotify track features such as: Danceability, Energy, Loudn
 Go to https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data, download train.csv dataset.
 
 Install and load these packages in R: {DFATools}, {tidyverse}, {MASS}, {caret}, {corrplot}, {knitr}, {mda}
-
-# Discriminant Analysis Methods
-
-We consider three related classification methods that differ in their assumptions and flexibility:
-
-Linear Discriminant Analysis (LDA) assumes that all classes share a common covariance structure and produces linear decision boundaries. This makes the model simple, stable, and interpretable.
-
-Quadratic Discriminant Analysis (QDA) relaxes this assumption by allowing each class to have its own covariance matrix, resulting in nonlinear (quadratic) decision boundaries.
-
-Flexible Discriminant Analysis (FDA) extends these ideas by incorporating nonlinear transformations, enabling more complex decision boundaries at the cost of reduced interpretability.
-
-These methods represent a spectrum from simplicity (LDA) to flexibility (FDA), allowing us to evaluate trade-offs between interpretability and predictive performance.
 
 
 # 1. Feature Selection
