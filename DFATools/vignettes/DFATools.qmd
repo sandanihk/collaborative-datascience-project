@@ -38,7 +38,7 @@ The dataset contains Spotify track features such as: Danceability, Energy, Loudn
 # Preliminaries
 Go to https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data, download train.csv dataset.
 
-Install and load these packages in R: {tiduverse}, {MASS}, {caret}, {corrplot}, {knitr}, {mda}
+Install and load these packages in R: {DFATools}, {tidyverse}, {MASS}, {caret}, {corrplot}, {knitr}, {mda}
 
 # Discriminant Analysis Methods
 
@@ -81,11 +81,10 @@ df_grouped <- df %>%
     "pop","hip-hop","dance","house","techno",
     "acoustic","classical","jazz","folk","blues"
   )) %>%
-  mutate(
-    genre_group = case_when(
-      track_genre %in% c("rock","metal","hard-rock","punk","alternative") ~ "High_Energy",
-      track_genre %in% c("pop","hip-hop","dance","house","techno") ~ "Contemporary",
-      TRUE ~ "Traditional"
+  mutate(genre_group = case_when(
+    track_genre %in% c("rock", "metal", "hard-rock", "punk", "alternative") ~ "Rock",
+    track_genre %in% c("pop", "hip-hop", "dance", "house", "techno") ~ "Electronic & Pop",
+    track_genre %in% c("acoustic", "classical", "jazz", "folk", "blues") ~ "Acoustic & Traditional"
     )
   )
 ```
