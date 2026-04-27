@@ -48,7 +48,7 @@ Which features are most important for distinguishing genres?
 The dataset contains Spotify track features such as: Danceability, Energy, Loudness, Tempo, Acousticness. There are 114 genres in the dataset.
 
 # Preliminaries
-Go to https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data, download train.csv dataset.
+Go to <https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data>, download train.csv dataset.
 
 Install and load these packages in R: {DFATools}, {tidyverse}, {MASS}, {caret}, {corrplot}, {knitr}, {mda}
 
@@ -91,18 +91,7 @@ df_grouped <- df %>%
 
 Grouping reduces 100+ genres into 3 interpretable categories. This improves model stability and makes DFA assumptions more reasonable.
 
-# 3. Check Group Balance
-
-Ensure that each class has a similar number of observations to avoid biased model training.
-
-```{r}
-df_grouped %>%
-  count(genre_group) %>%
-  arrange(desc(n))
-```
-Each group contains 5,000 observations, indicating a perfectly balanced dataset. This is ideal because classification accuracy will not be toward ant class.
-
-# 4. Build modeling dataset
+# 3. Build a Modeling Dataset
 
 We construct the final dataset by selecting predictors and the target variable, removing missing values, and converting the outcome to a factor.
 
@@ -113,10 +102,20 @@ df_model <- df_grouped %>%
 
 df_model$genre_group <- as.factor(df_model$genre_group)
 
-kable(as.data.frame(table(df_model$genre_group)))
 glimpse(df_model)
 ```
 The dataset contains 15,000 observations evenly distributed across three classes. Converting the outcome to a factor ensures compatibility with classification models.
+
+# 4. Check Group Balance
+
+Ensure that each class has a similar number of observations to avoid biased model training.
+
+```{r}
+df_grouped %>%
+  count(genre_group) %>%
+  arrange(desc(n))
+```
+Each group contains 5,000 observations, indicating a perfectly balanced dataset. This is ideal because classification accuracy will not be toward any class.
 
 # 5. Train/Test Split and Feature Scaling
 
@@ -180,11 +179,21 @@ Using the `run_lda_model()` function from **DFATools**, we fit the model and eva
 lda_res <- run_lda_model(train_data, test_data, "genre_group")
 
 lda_res$accuracy
+
+# Show detailed LDA output
+lda_model <- MASS::lda(
+  genre_group ~ .,
+  data = train_data
+)
+
+lda_model
 ```
 
 The model achieves approximately 70% accuracy on the test data, indicating that the selected audio features provide strong discriminatory power between genre groups.
 
 LDA constructs two axes (LD1 and LD2) that maximize separation between groups. ~70% for LD1 and 30% on LD2, LD1 was strongly influenced by acousticness (negative weight) and energy (positive weight), LD2 was strongly influenced by danceability and speechiness (negative weight).
+
+The group means reveal clear differences in musical characteristics: Acoustic & Traditional with low energy, Very high acousticness, Lower danceability; Electronic & Pop with Higher danceability, Moderate energy and Lower acousticness; Rock with Highest energy, Lowest acousticness, Lower danceability. These patterns confirm that genre groups differ in meaningful and interpretable ways.
 
 # 9. Model Evaluation
 We summarize model performance below:
@@ -196,7 +205,7 @@ kable(data.frame(
 ))
 ```
 
-# 10. Cross validation
+# 10. Cross Validation
 
 We use leave-one-out cross-validation (LOOCV) to assess model performance on the training data.In LOOCV, the model is trained repeatedly, each time leaving out a single observation as the validation sample. This process is repeated for every observation in the training dataset, resulting in N validation runs (where N is the number of training samples). This approach provides a nearly unbiased estimate of model performance, although it can be computationally intensive.
 
@@ -213,16 +222,33 @@ lda_cv_acc
 ```
 The LOOCV accuracy is approximately 70%, which is consistent with the test accuracy obtained earlier. This agreement suggests that the model generalizes well and is not overfitting the training data.
 
-# 11. Test performance
+# 11. Test Performance
 
-The group means reveal clear differences in musical characteristics: Acoustic & Traditional with low energy, Very high acousticness, Lower danceability; Electronic & Pop with Higher danceability, Moderate energy and Lower acousticness; Rock with Highest energy, Lowest acousticness, Lower danceability. These patterns confirm that genre groups differ in meaningful and interpretable ways.
+We examine the confusion matrix to understand classification performance in detail.
+```{r}
+conf_mat <- lda_res$confusion_matrix
+conf_mat
 
+lda_test_acc <- lda_res$accuracy
+
+perf_table <- data.frame(
+  Metric = c("LOOCV Accuracy", "Test Accuracy"),
+  Value = c(round(lda_cv_acc, 4), round(lda_test_acc, 4))
+)
+
+kable(perf_table)
+```
 The model achieves approximately 70% accuracy on the test set, which is very close to the cross-validation accuracy (~70%). This consistency suggests that the model generalizes well and is not overfitting.
 
 Importantly, the accuracy is substantially higher than the no-information rate (33%), and the extremely small p-value confirms that the model performs significantly better than random guessing.
 
+Class-wise metrics show that Rock has the highest sensitivity (~0.73), meaning it is most accurately identified, while Acoustic & Traditional has the highest specificity (~0.90), indicating it is least likely to be misclassified. This suggests that acoustic features are more distinctive, whereas high-energy genres overlap more.
+
+The Kappa statistic (~0.56) indicates moderate agreement beyond chance, confirming that the model captures meaningful structure in the data. The significant McNemar’s test further suggests that classification errors are not evenly distributed across classes.
+
 # 12. LDA Visualization
 
+We visualize the separation of genres in discriminant space.
 ```{r}
 lda_res$plot
 ```
@@ -235,9 +261,13 @@ plot_confusion_matrix(lda_res$confusion_matrix)
 ```
 The confusion matrix heatmap visually highlights model performance, with darker diagonal cells indicating correct classifications and lighter off-diagonal cells representing errors. The model performs well overall, as shown by strong diagonal dominance. Acoustic & Traditional is clearly separated from other genres, while the largest misclassifications occur between Electronic & Pop and Rock. This pattern reflects the similarity in their audio feature.
 
-# 14. Feature importance
+# 14. Feature Importance
+
+We examine LDA coefficients to identify important features.
 ```{r}
 lda_coeff <- lda_res$coefficients
+
+kable(round(lda_coeff, 3))
 ```
 The LDA coefficients indicate that acousticness is the dominant feature driving the primary discriminant (LD1), with a large negative coefficient, while energy contributes positively. This suggests that LD1 primarily separates acoustic music from more energetic, amplified genres.
 
@@ -245,7 +275,7 @@ The second discriminant (LD2) is driven mainly by danceability, with a strong ne
 
 Overall, the results show that genre separation is structured along interpretable musical dimensions, with acousticness and energy defining the main axis of variation and danceability providing secondary differentiation.
 
-# 15. QDA model
+# 15. QDA Model
 Evaluate whether a more flexible model (QDA), which allows different covariance structures for each group, improves classification performance.
 
 ```{r}
@@ -256,7 +286,7 @@ plot_confusion_matrix(qda_res$confusion_matrix)
 ```
 The QDA model achieves about 65% accuracy, which is lower than LDA (~70%). This suggests that allowing more flexibility does not improve performance for this dataset.
 
-# 16. FDA
+# 16. FDA Model
 Apply Flexible Discriminant Analysis (FDA) to capture potential non-linear relationships between features and genre groups.
 
 ```{r}
@@ -295,8 +325,6 @@ Several limitations should be noted: 1. Genre labels are inherently subjective a
 The functions developed in this package can be used to perform discriminant analysis on any dataset with a categorical outcome variable. Here is an example workflow:
 
 ```{r}
-library(DFATools)
-
 prepared <- prepare_data(
   df_model,
   target_column_name = "genre_group",
