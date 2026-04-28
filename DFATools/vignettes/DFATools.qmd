@@ -486,7 +486,7 @@ In the confusion matrix heatmap, there is a strong diagnol from the bottom-left 
 
 Ultimately, this visualization proves that while the discriminant functions are effective, the inherent blurring on genre boundaries is the primary constraint on their classification.
 
-### 10. QDA model
+### 9. QDA model
 
 **To evaluate whether a more flexible decision boundary would enhance classification, a QDA is fitted to the data.** While LDA assumes that all genre groups share similar variability and relationships between features, **QDA allows each group to have its own structure, providing a "curved" rather than linear boundary, which is better for capturing complex relationships between audio features.**
 
@@ -631,7 +631,7 @@ Additionally, the lower accuracy of the confusion matrix heatmap for the QDA mod
 
 For our case, a linear approach with LDA showed to be more robust and effective in capturing the true signal within the musical features, and remained the preferred model for our classification.
 
-### 11. FDA model
+### 10. FDA model
 
 **FDA can be done to determine if non-linear transformations of the predictors could improve group separation.** FDA is an extension of LDA and uses non-parametric regression to model the discriminant functions. This allows the model to capture more complex boundaries than a standard linear model might miss.
 
@@ -796,7 +796,7 @@ fda_plot <- plot_fda_boundary(
 fda_plot
 ```
 
-### 12. Model Comparison
+### 11. Model comparison
 
 To conclude the analysis, the classification performance of the three models (LDA, QDA, and FDA) are compared. This comparison is essential to determine whether our dataset is best captured by linear, quadratic, or flexible, non-linear boundaries
 
@@ -814,7 +814,7 @@ kable(data.frame(
 
 The results highlight differences in model flexibility: LDA provides stable and interpretable results but may struggle with overlapping classes. QDA improves flexibility by modeling class-specific covariance, which can better capture nonlinear boundaries. FDA allows even more complex relationships but may introduce overfitting and reduce interpretability. In this analysis, increased flexibility does not always guarantee improved performance, emphasizing the importance of balancing model complexity and generalization.
 
-### Summary
+## Summary
 
 This analysis demonstrates that music genres can be classified with moderate accuracy (\~71%) using Spotify's audio metadata, confirming that genres possess distinct and quantifiable characteristics.
 
@@ -822,11 +822,11 @@ Statistical testing (MANOVA) showed that these differences are highly significan
 
 Overall, the {DFAtools} package provides a structured workflow for multivariate classification. By comparing linear and non-linear boundaries, the package identifies the optimal fit for the user's data. While the accuracy is dictated by the separability of the input variables, the visualizations (confusion matrix heatmaps and discriminant plots) allow the users to determine whether their groups intersect. This musical analysis supports the use of {DFAtools} for transforming raw multivariate data into interpretable, statistically significant group profiling.
 
-### Limitations
+## Limitations
 
 While the models from {DFAtools} provide a framework for classification, there are several factors that may constrain interpretation of these results. First, the performance accuracy (\~70%) is a reflection of the inherent overlap between groups in the multivariate space. Any dataset where categories exist on a continuum (i.e, music genres or biological phenotypes) will naturally have intersections at group boundaries that linear or quadratic functions cannot fully resolve. Additionally, while the feature importance rankings provided valuable insight, they indicate a statistical association rather than a causal relationship. Users should interpret these results as a measure of group distinctiveness and variable contribution within their dataset, rather than universal rules for the categories.
 
-### How to Use the DFA Tools Package
+## How to use the DFATools package
 
 The {DFAtools} package provides a pipeline to transform raw multivariate data into a validated classification model.
 
