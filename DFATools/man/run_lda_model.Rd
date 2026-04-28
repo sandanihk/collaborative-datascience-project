@@ -2,39 +2,48 @@
 % Please edit documentation in R/DFATools.R
 \name{run_lda_model}
 \alias{run_lda_model}
-\title{Running a Linear Discriminant Analysis (LDA) with visualization}
+\title{Run Linear Discriminant Analysis (LDA) with Cross-Validation and Visualization}
 \usage{
 run_lda_model(training_data, test_data, target_column_name)
 }
 \arguments{
-\item{training_data}{a data frame containing the training data}
+\item{training_data}{A data frame containing the training data.}
 
-\item{test_data}{a data frame containing the test data}
+\item{test_data}{A data frame containing the test data.}
 
-\item{target_column_name}{a character string specifying the categorical response variable name}
+\item{target_column_name}{A character string specifying the categorical response variable name.}
 }
 \value{
 A list containing:
 \item{model}{The fitted LDA model.}
-\item{predictions}{The prediction object returned by predict()}
-\item{confusion_matrix}{A caret confusion matrix object}
-\item{accuracy}{The test set accuracy}
-\item{coefficients}{The LDA scaling coefficients}
-\item{plot}{An LD1 vs. LD2 ggplot object if available. NULL for two-class problems}
+\item{predictions}{The prediction object returned by predict().}
+\item{confusion_matrix}{A caret confusion matrix object.}
+\item{accuracy}{The test set accuracy.}
+\item{cv_model}{The LOOCV model output.}
+\item{cv_accuracy}{The Leave-One-Out Cross-Validation accuracy.}
+\item{coefficients}{The LDA scaling coefficients.}
+\item{plot}{An LD1 vs. LD2 ggplot object if available. NULL for two-class problems.}
 }
 \description{
-This function fits an LDA model, evaluates its performance on test data, and creates an LD1 vs. LD2 visualization when at least two discriminant
-axes are available
+Fits a Linear Discriminant Analysis (LDA) model, evaluates its classification
+performance on test data, performs Leave-One-Out Cross-Validation (LOOCV) on
+the training data, and creates an LD1 vs. LD2 visualization when at least two
+discriminant axes are available.
 }
 \examples{
-prepared <- prepare_data(iris, "Species", training_propotion_size=0.7)
+prepared <- prepare_data(iris, "Species", training_propotion_size = 0.7)
+
 lda_result <- run_lda_model(
   training_data = prepared$training_data,
   test_data = prepared$test_data,
   target_column_name = "Species"
 )
+
 lda_result$accuracy
+lda_result$cv_accuracy
 lda_result$plot
 }
-\keyword{lda,}
+\keyword{classification}
+\keyword{cross-validation}
+\keyword{lda}
 \keyword{visualization}

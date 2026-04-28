@@ -2,36 +2,44 @@
 % Please edit documentation in R/DFATools.R
 \name{run_qda_model}
 \alias{run_qda_model}
-\title{Running a Quadratic Discriminant Analysis (QDA)}
+\title{Run Quadratic Discriminant Analysis (QDA) with Cross-Validation}
 \usage{
 run_qda_model(training_data, test_data, target_column_name)
 }
 \arguments{
-\item{training_data}{a data frame containing the training data}
+\item{training_data}{A data frame containing the training data.}
 
-\item{test_data}{a data frame containing the test data}
+\item{test_data}{A data frame containing the test data.}
 
-\item{target_column_name}{a character string defining the categorical response variable}
+\item{target_column_name}{A character string specifying the categorical response variable.}
 }
 \value{
 A list containing:
-\item{model}{The fitted QDA model}
-\item{predictions}{The prediction object returned by predict()}
-\item{confusion_matrix}{A caret confusion matrix object}
-\item{accuracy}{The test set accuracy}
+\item{model}{The fitted QDA model.}
+\item{predictions}{The prediction object returned by predict().}
+\item{confusion_matrix}{A caret confusion matrix object.}
+\item{accuracy}{The test set accuracy.}
+\item{cv_model}{The LOOCV model output.}
+\item{cv_accuracy}{The Leave-One-Out Cross-Validation accuracy.}
 }
 \description{
-This function fits a QDA model and evaluates its classification performance on the test data.
-Unlike LDA, QDA allows each class to have its own
-covariance structure, which permits more flexible decision boundaries.
+Fits a Quadratic Discriminant Analysis (QDA) model, evaluates its classification
+performance on test data, and performs Leave-One-Out Cross-Validation (LOOCV)
+on the training data. Unlike LDA, QDA allows each class to have its own
+covariance structure, which enables more flexible decision boundaries.
 }
 \examples{
-prepared <- prepare_data(iris, "Species", training_propotion_size=0.7 )
+prepared <- prepare_data(iris, "Species", training_propotion_size = 0.7)
+
 qda_result <- run_qda_model(
   training_data = prepared$training_data,
   test_data = prepared$test_data,
   target_column_name = "Species"
 )
+
 qda_result$accuracy
+qda_result$cv_accuracy
 }
+\keyword{classification}
+\keyword{cross-validation}
 \keyword{qda}

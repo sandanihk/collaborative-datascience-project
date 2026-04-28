@@ -2,16 +2,24 @@
 % Please edit documentation in R/DFATools.R
 \name{run_fda_model}
 \alias{run_fda_model}
-\title{Running a Flexible Discriminant Analysis (FDA)}
+\title{Run Flexible Discriminant Analysis (FDA) with Cross-Validation}
 \usage{
-run_fda_model(training_data, test_data, target_column_name)
+run_fda_model(
+  training_data,
+  test_data,
+  target_column_name,
+  cv_folds = 10,
+  seed = 123
+)
 }
 \arguments{
-\item{training_data}{a data frame containing the training data}
+\item{training_data}{A data frame containing the training data.}
 
-\item{test_data}{a data frame containing the test data}
+\item{test_data}{A data frame containing the test data.}
 
-\item{target_column_name}{a character string of the categorical response variable name}
+\item{target_column_name}{A character string specifying the categorical response variable name.}
+
+\item{cv_folds}{Number of cross-validation folds. Default is 10.}
 }
 \value{
 A list containing:
@@ -19,20 +27,28 @@ A list containing:
 \item{predictions}{The predicted class labels.}
 \item{confusion_matrix}{A caret confusion matrix object.}
 \item{accuracy}{The test set accuracy.}
+\item{cv_model}{The caret cross-validation model output.}
+\item{cv_accuracy}{The cross-validation accuracy.}
 }
 \description{
-#' Fits a Flexible Discriminant Analysis model and evaluates its classification
-performance on test data. FDA is a more flexible extension of discriminant
-analysis that can model more complex relationships between predictors and
-class membership
+Fits a Flexible Discriminant Analysis model, evaluates its classification
+performance on test data, and performs k-fold cross-validation on the
+training data. FDA is a more flexible extension of discriminant analysis
+that can model more complex relationships between predictors and class
+membership.
 }
 \examples{
-prepared <- prepare_data(iris, "Species", training_propotion_size=0.7)
+prepared <- prepare_data(iris, "Species", training_propotion_size = 0.7)
+
 fda_result <- run_fda_model(
   training_data = prepared$training_data,
   test_data = prepared$test_data,
   target_column_name = "Species"
 )
+
 fda_result$accuracy
+fda_result$cv_accuracy
 }
+\keyword{classification}
+\keyword{cross-validation}
 \keyword{fda}
