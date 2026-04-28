@@ -14,8 +14,12 @@ Imports:
     ggplot2,
     MASS,
     mda,
-    tidyr
+    tidyr,
+    earth
 Suggests: 
     knitr,
     quarto
 VignetteBuilder: quarto
+Depends: 
+    R (>= 3.5)
+LazyData: true
