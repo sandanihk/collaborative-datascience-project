@@ -113,7 +113,7 @@ df_grouped <- df %>%
 
 The dataset includes 114 genre labels, many of which exhibit high stylistic overlap. To ensure statistical robustness, we focused the analysis on 15 of the most popular genres aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional.
 
-![](genre groups.png){fig-align="center" width="82%"}
+![](genre%20groups.png){fig-align="center" width="82%"}
 
 **Checking group balance**
 
@@ -277,11 +277,15 @@ summary(manova_model, test = "Wilks")
 
 For our case, the MANOVA test results were highly significant (p \< 2.2e-16), indicating that genre groups differ in their combined audio features. The relatively low Wilks’ Lambda (0.412) suggests that about 59% of the variance in the audio features can be explained by the differences in the genre groups. Additionally, this low value provides statistical justification to perform a DFA to model these differences.
 
-### 7. Running an LDA Model
+### 7. Running a LDA model
 
-With a significant MANOVA confirming group differences, an LDA is fitted to the to the training data to classify the groups (i.e. genres). LDA creates linear combination of the predictors to maximize the ratio of between-group to within-group variance.
+With MANOVA test confirming group differences, **a LDA model is fitted to the to the training data to classify the groups (i.e. genres). LDA creates linear combination of the predictors to best separate the different groups. For example,**
 
-Using the `run_lda_model()` function from the {**DFATools} package**, we fit the model and evaluate its performance on a held-out test set:
+$$
+LD1​=w1​(energy)+w2​(acousticness)+w3​(danceability)+w4​(speechiness)+w5​(instrumental.)
+$$
+
+Using the `run_lda_model()` function from the {**DFATools} package**, It fit the model, performs leave-one-out cross-validation, predicts on the test set, creates a confusion matrix, extracts accuracy, and returns an LD1 versus LD2 plot.
 
 ```{r}
 # Running LDA function
@@ -357,15 +361,15 @@ run_lda_model <- function(training_data, test_data, target_column_name) {
 }
 ```
 
-#### Cross Validation
+#### Cross validation
 
 To further assess the discriminant functions, Leave-One-Out Cross-Validation (LOOCV) is done. In this iterative process, the model is trained using all observations except one, which is then used as the single-item "test set" to examine classification accuracy. This process is repeated until every observation serves as the validation point; thus, the number of rounds is determined by the sample size.
 
-#### Model Evaluation on Test Data
+#### Model evaluation on test data
 
 To determine the real-world utility of the discriminant functions, the model is used to predict the genres of the independent test set (30%; `test_data`). This step is important for verifying that the patterns from the training phase is generalizable to the new, unseen test data.
 
-#### LDA Visualization
+#### LDA visualization
 
 To visualize the group separation achieved from the model, the training observations (`train_data`) are projected onto two discriminant axes (Linear Discriminant 1 vs. Linear Discriminant 2). The resulting scatterplot, enhanced with 68% confidence ellipses, provides a spatial representation of how the model distinguishes the three groups.
 
@@ -382,63 +386,15 @@ lda_results$plot
 
 #### Cross-validation results
 
-The LOOCV results yielded and accuracy of 0.703, showing that this model correctly classified \~71% of the observations. Since the cross validation accuracy is high, it suggests that the LDA model has captured generalizable musical patterns between the grouped genres!
+**The LOOCV results yielded and accuracy of 0.703, showing that this model correctly classified \~71% of the observations. Since the cross validation accuracy is high, it suggests that the LDA model has captured generalizable musical patterns between the grouped genres.**
 
 The group means provide a profile of the audio characteristics that describe the grouped genres. The Acoustic & Traditional group was characterized by high acousticness (+0.919) and low energy (-0.818). The Electronic & Pop group showed higher danceability (+0.707) and slightly lower acousticness (-0.369). Lastly, Rock & Metal was defined by high energy (+0.551) and low acousticness (-0.550) and danceability (-0.374).
 
 Ultimately, Rock & Metal represents high-energy, amplified music, Electronic & Pop captures rhythm-driven and dance-oriented styles, while Acoustic & Traditional includes organic, low-energy genres. This grouping is motivated by shared audio characteristics rather than strict genre labels, allowing the models to learn more coherent patterns.
 
-#### LDA Visualization results
+#### Feature importance and discriminant coefficients
 
-The LDA model constructed two linear discriminants to maximize group separation: LD1 and LD2. The primary axis LD1 explains 70% of between-group variance, showing that the groups' difference is driven mostly by acousticness (strong negative weight) and energy (strong positive weight). The second axis LD2 shows that the remaining 30% of between-group variance is influenced by danceability and speechiness (negative weights).
-
-The x-axis (Linear Discriminant 1) served as the strongest separator, distinguishing Acoustic & Traditional from the more modern, high energy groups. The y-axis further refines the classification by separating the Rock & Metal and Electronic & Pop groups. While both groups are relatively high-energy , LD2 captures the nuanced differences in the rhythmic and vocal structure (i.e., danceability and speechiness).
-
-It is important to note that there is overlap between the groups, as some tracks from different genres groups share similar audio characteristics. This proximity in the multivariate space accounts for the missclassification patterns observed in the confusion matrix. This suggests that while these genres are statistically distinct, they exist on a continuum rather than as entirely isolated categories.
-
-#### Test accuracy results
-
-The model achieved an accuracy of 70% on the test set, which is very close to the cross-validation accuracy (\~71%). This consistency suggests that the model generalizes well and is not overfitting, meaning that it learned the fundamental characteristics of the genres rather than memorizing.
-
-Importantly, the accuracy was substantially higher than the No-Information rate (33%). This rate represents the accuracy expected from random guessing from a three-group dataset. The p-value is also significantly lower than 0.05. These results allow us to see that the LDA model performs better than chance, and that the audio features (specifically acousticness, energy, and danceability) are suitable predictors of musical genres.
-
-### 8. Confusion Matrix Heatmap
-
-To provide a view of model performance, a heatmap of the confusion matrix is generated. A confusion matrix compares the model's predicted classifications against the actual/true genre labels. This visualization translates the raw classification counts into a color-coded grid, where the intensity of the color represents the frequency of observations, the rows represent the predicted classes, and the columns are the true classes.
-
-```{r}
-# Plotting the confusion matrix
-
-plot_confusion_matrix <- function(confusion_matrix, title = "Confusion Matrix Heatmap") {
-  conf_df <- as.data.frame(confusion_matrix$table)
-
-  ggplot2::ggplot(conf_df, ggplot2::aes(x = Reference, y = Prediction, fill = Freq)) +
-    ggplot2::geom_tile() +
-    ggplot2::geom_text(ggplot2::aes(label = Freq), size = 3) +
-    ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
-    ggplot2::theme_minimal() +
-    ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
-    ) +
-    ggplot2::labs(
-      title = title,
-      x = "True Class",
-      y = "Predicted Class"
-    )
-}
-```
-
-This is an example of running the plotting the confusion matrix function:
-
-```{r}
-plot_confusion_matrix(lda_results$confusion_matrix, title = "LDA Confusion Matrix")
-```
-
-In the confusion matrix heatmap, there is a strong diagnol from the bottom-left to top-right, which represents correct classifications. The deep saturation shows that the majority of the tracks in the three categories were assigned to their true genre group, supporting high model precision. The light-shaded spaces reveal the points of confusion. As hypothesized, the most frequent misclassifications occur between Electronic & Pop and Rock & Metal. The heatmap confirms that these two genres are more likely to be mistaken from one another than for an Acoustic & Traditional track.
-
-Ultimately, this visualization proves that while the discriminant functions are effective, the inherent blurring on genre boundaries is the primary constraint on their classification.
-
-### 9. Feature Importance and Discriminant Coefficients
+The LDA model constructed two linear discriminants to maximize group separation: **LD1 and LD2. The primary axis LD1 explains 70% of between-group variance, showing that the groups' difference is driven mostly by acousticness (strong negative weight) and energy (strong positive weight). The second axis LD2 shows that the remaining 30% of between-group variance is influenced more by danceability (strong negative weight)**.
 
 To understand the drives behind the model's classification, the standardized coefficients for the first two discriminants are analyzed. The coefficients represent the relative contribution of each audio feature to the different genre groups.
 
@@ -468,15 +424,71 @@ if(ncol(lda_coeff) >= 2){
 }
 ```
 
-The coefficients for LD1 indicate that `acousticness` was the dominant features driving the primary axis of separation (carrying a large negative weight). On the other hand, `energy` contributes a strong positive weight. These results confirm that LD1 serves as an axis for musical characteristics like production intensity, effectively isolating Acoustic & Traditional tracks from more energetic, amplified genres. In this multivariate spaces, as `acousticness` decreases and `energy` increases, a track's probability of being classified as Rock & Metal or Electronic & Pop rises significantly.
+-   **The coefficients for LD1 indicate that `acousticness` was the dominant features driving the primary axis of separation (carrying a large negative weight). On the other hand, `energy` contributes a strong positive weight.**
 
-The second discriminant function (LD2) provided the nuance to separate the other groups. This axis is driven mainly by `danceability`, with a strong negative coefficient. This indicates that LD2 is the primary tool for distinguishing dance-oriented genres like Electronic & Pop, from less dance-focused genres like Rock & Metal. Other features, such as `speechiness`, also contribute to the axis.
+-   **These results confirm that LD1 serves as an axis for musical characteristics like production intensity, effectively isolating Acoustic & Traditional tracks from more energetic, amplified genres.**
+
+-   **In this multivariate spaces, as `acousticness` decreases and `energy` increases, a track's probability of being classified as Rock & Metal or Electronic & Pop rises significantly.**
+
+-   **The second discriminant function (LD2) is to separate the other groups. This axis is driven mainly by `danceability`, with a strong negative coefficient.**
+
+-   **This indicates that LD2 is the primary tool for distinguishing dance-oriented genres like Electronic & Pop, from less dance-focused genres like Rock & Metal. Other features, such as `speechiness`, also contribute to the axis.**
 
 Overall, the model results demonstrate that genre separation can be structured along interpretable musical dimensions, with `acousticness` and `energy` defining the main axis of variation and `danceability` providing secondary differentiation.
 
+#### LDA visualization results
+
+**The x-axis (Linear Discriminant 1) served as the strongest separator, distinguishing Acoustic & Traditional from the more modern, high energy groups. The y-axis further refines the classification by separating the Rock & Metal and Electronic & Pop groups. While both groups are relatively high-energy , LD2 captures the differences in the rhythmic and vocal structure**.
+
+It is important to note that there is overlap between the groups, as some tracks from different genres groups share similar audio characteristics. This proximity in the multivariate space accounts for the missclassification patterns observed in the confusion matrix. This suggests that while these genres are statistically distinct, they exist on a continuum rather than as entirely isolated categories.
+
+#### Test accuracy results
+
+**The model achieved an accuracy of 70% on the test set, which is very close to the cross-validation accuracy (\~71%).** This consistency suggests that the model generalizes well and is not overfitting, meaning that it learned the fundamental characteristics of the genres rather than memorizing.
+
+Importantly, the accuracy was substantially higher than the chance rate (33%). The MANOVA p-value is also significantly lower. **These results allow us to see that the LDA model performs better than chance rat (33%), and that the audio features (specifically acousticness, energy, and danceability) are suitable predictors of musical genres.**
+
+### 8. Confusion matrix
+
+To provide a view of model performance, a confusion matrix is generated using `plot_confusion_matrix()`function in {DFATools} package. **This confusion matrix compares the model's predicted classifications against the actual/true genre labels**.
+
+This visualization translates the raw classification counts into a color-coded grid, where the intensity of the color represents the frequency of observations, the rows represent the predicted classes, and the columns are the true classes.
+
+```{r}
+# Plotting the confusion matrix
+
+plot_confusion_matrix <- function(confusion_matrix, title = "Confusion Matrix Heatmap") {
+  conf_df <- as.data.frame(confusion_matrix$table)
+
+  ggplot2::ggplot(conf_df, ggplot2::aes(x = Reference, y = Prediction, fill = Freq)) +
+    ggplot2::geom_tile() +
+    ggplot2::geom_text(ggplot2::aes(label = Freq), size = 3) +
+    ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+    ) +
+    ggplot2::labs(
+      title = title,
+      x = "True Class",
+      y = "Predicted Class"
+    )
+}
+```
+
+This is an example of running the plotting the confusion matrix function:
+
+```{r}
+plot_confusion_matrix(lda_results$confusion_matrix, title = "LDA Confusion Matrix")
+```
+
+In the confusion matrix heatmap, there is a strong diagnol from the bottom-left to top-right, which represents correct classifications. The deep saturation shows that the majority of the tracks in the three categories were assigned to their true genre group, supporting high model precision. The light-shaded spaces reveal the points of confusion. **The most frequent misclassifications occur between Electronic & Pop and Rock & Metal.** The heatmap confirms that these two genres are more likely to be mistaken from one another than for an Acoustic & Traditional track.
+
+Ultimately, this visualization proves that while the discriminant functions are effective, the inherent blurring on genre boundaries is the primary constraint on their classification.
+
 ### 10. QDA model
 
-To evaluate whether a more flexible decision boundary would enhance classification, a QDA is fitted to the data. While LDA assumes that all genre groups share similar variability and relationships between features, QDA allows each group to have its own structure, providing a "curved" rather than linear boundary, which is better for capturing complex relationships between audio features.
+**To evaluate whether a more flexible decision boundary would enhance classification, a QDA is fitted to the data.** While LDA assumes that all genre groups share similar variability and relationships between features, **QDA allows each group to have its own structure, providing a "curved" rather than linear boundary, which is better for capturing complex relationships between audio features.**
 
 ```{r}
 # Function to run QDA model and evaluate performance
@@ -534,16 +546,16 @@ qda_results$accuracy
 qda_results$cv_accuracy
 ```
 
-The QDA model yielded an accuracy of about 66%, which is lower than the LDA model (\~71%). This lower accuracy performance suggests that the added complexity of the QDA model may be leading to overfitting or that the assumption of equal covariance (required for LDA) is sufficiently met by this dataset.
+**The QDA model yielded an accuracy of about 66%, which is lower than the LDA model (\~71%).** This lower accuracy performance suggests that the added complexity of the QDA model may be leading to overfitting or that the assumption of equal covariance (required for LDA) is sufficiently met by this dataset.
 
 ```{r}
 plot_qda_boundary <- function(qda_result, training_data, target_column_name,
                               x_feature, y_feature) {
   
-  # Get fitted QDA model
+  # Fitting the QDA model
   model <- qda_result$model
   
-  # Create grid across two selected features
+  # Creating grid across two selected features (acousticness and energy)
   grid <- expand.grid(
     x = seq(min(training_data[[x_feature]]), max(training_data[[x_feature]]), length.out = 200),
     y = seq(min(training_data[[y_feature]]), max(training_data[[y_feature]]), length.out = 200)
@@ -551,7 +563,7 @@ plot_qda_boundary <- function(qda_result, training_data, target_column_name,
   
   names(grid) <- c(x_feature, y_feature)
   
-  # Fill all other predictor variables with their mean values
+  # Filling all other predictor variables with their mean values
   predictor_names <- setdiff(names(training_data), target_column_name)
   other_features <- setdiff(predictor_names, c(x_feature, y_feature))
   
@@ -559,13 +571,12 @@ plot_qda_boundary <- function(qda_result, training_data, target_column_name,
     grid[[feature]] <- mean(training_data[[feature]], na.rm = TRUE)
   }
   
-  # Make sure columns are in the same order as training predictors
   grid <- grid[, predictor_names]
   
-  # Predict class for each grid point
+  # Predicting class for each grid point
   grid$predicted_class <- predict(model, newdata = grid)$class
   
-  # Plot QDA decision regions with actual training points
+  # Plotting QDA decision regions with actual training points
   ggplot2::ggplot() +
     ggplot2::geom_tile(
       data = grid,
@@ -588,7 +599,7 @@ plot_qda_boundary <- function(qda_result, training_data, target_column_name,
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(
-      title = "QDA Decision Boundary Plot",
+      title = "QDA Decision Boundaries",
       subtitle = paste(x_feature, "vs", y_feature),
       x = x_feature,
       y = y_feature,
@@ -611,7 +622,9 @@ qda_plot
 ```
 
 ```{r}
+
 plot_confusion_matrix(qda_results$confusion_matrix, title = "QDA Confusion Matrix")
+
 ```
 
 Additionally, the lower accuracy of the confusion matrix heatmap for the QDA model confirms that increasing the model flexibility does not always result in better predictive power.
@@ -620,29 +633,30 @@ For our case, a linear approach with LDA showed to be more robust and effective 
 
 ### 11. FDA model
 
-FDA can be done to determine if non-linear transformations of the predictors could improve group separation. FDA is an extension of LDA and uses non-parametric regression to model the discriminant functions. This allows the model to capture more complex boundaries than a standard linear model might miss.
+**FDA can be done to determine if non-linear transformations of the predictors could improve group separation.** FDA is an extension of LDA and uses non-parametric regression to model the discriminant functions. This allows the model to capture more complex boundaries than a standard linear model might miss.
 
 ```{r}
 # Function for running FDA model
+
 run_fda_model <- function(training_data, test_data, target_column_name, cv_folds = 10, seed = 123) {
 
   # Setting seed for reproducibility
   set.seed(seed)
 
-  # Creating model formual
+  # Creating model formuala
   formula <- stats::as.formula(paste(target_column_name, "~ ."))
 
-  # Fit FDA model on full training data
+  # Fitting FDA model on full training data
   model <- mda::fda(formula, data = training_data)
 
-  # Create folds for k-fold cross-validation
+  # Creating folds for k-fold cross-validation
   folds <- caret::createFolds(
     training_data[[target_column_name]],
     k = cv_folds,
     list = TRUE
   )
 
-  # Initialize vector to store accuracy after each fold
+  # Initializing vector to store accuracy after each fold
   fold_accuracy <- numeric(length(folds))
 
   for (i in seq_along(folds)) {
@@ -704,12 +718,14 @@ fda_results$cv_accuracy
 
 ```
 
-The FDA model achieved a \~71% accuracy, similar to LDA. This indicates that adding non-linear flexibility does not significantly improve performance, suggesting that the relationship between audio features and their respective genre groups is largely linear.
+**The FDA model achieved a \~71% accuracy, similar to LDA. This indicates that adding non-linear flexibility does not significantly improve performance, suggesting that the relationship between audio features and their respective genre groups is largely linear.**
 
 Since FDA adds significant computational complexity without a gain in predictive accuracy, the LDA model remains the most efficient for our analysis.
 
 ```{r}
+
 plot_confusion_matrix(fda_results$confusion_matrix, title = "FDA Confusion Matrix")
+
 ```
 
 ```{r}
@@ -758,7 +774,7 @@ plot_fda_boundary <- function(fda_result, training_data, target_column_name,
     ) +
     ggplot2::theme_minimal() +
     ggplot2::labs(
-      title = "FDA Decision Boundary Plot",
+      title = "FDA Decision Boundaries",
       subtitle = paste(x_feature, "vs", y_feature),
       x = x_feature,
       y = y_feature,
