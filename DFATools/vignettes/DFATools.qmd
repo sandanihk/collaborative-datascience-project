@@ -15,7 +15,7 @@ date: 04/27/26
     2.  Dimensionality reduction
     3.  Understanding which variables drive group differences
 
-### Discriminant analysis methods
+### Discriminant function analysis methods
 
 We explore three related approaches:
 
@@ -77,7 +77,7 @@ df <- read_csv("https://raw.githubusercontent.com/sandanihk/collaborative-datasc
 
 To begin the analysis, the numeric predictor variables are selected. 5 key audio features: energy, acousticness, speechiness, danceability, and instrumentalness, were selected from the dataset to serve as predictors.
 
-This selection was made to maximize the variance explained across the dimensions of music composition while minimizing multicollinearity. By excluding redundant variables (e.g., loudness), we ensure that the DFA identifies significant boundaries between genre groups.
+This selection was made to maximize the variance explained across the dimensions of music composition. By excluding redundant variables (e.g., loudness), we ensure that the DFA identifies significant boundaries between genre groups.
 
 ```{r}
 # Creating a vector for selected audio features
@@ -90,6 +90,10 @@ audio_features <- c(
   "instrumentalness"
 )
 ```
+
+This selection was made to maximize the variance explained across the dimensions of music composition while minimizing multicollinearity. By excluding redundant variables (e.g., `loudness`), we ensure that the DFA identifies significant boundaries between genre groups.
+
+`energy` measures the intensity of the track, ranging from 0 to 1. `acousticness` represents the likelihood that the track was created with natural, non-amplified instruments, ranging from 0 to 1. `speechiness` scores the presence of spoken word, ranging from 0 to 1. `danceability` measures how suitable a track is for dancing, ranging from 0 to 1. `instrumentalness` reflects the likelihood of the track being instrumental rather than vocal-oriented. 0 is the minimum and 1 is the maximum for all the variables.
 
 ### 2. Genre Grouping
 
@@ -111,7 +115,7 @@ df_grouped <- df %>%
   ))
 ```
 
-The dataset includes 114 genre labels, many of which exhibit high stylistic overlap. To ensure statistical robustness, we focused the analysis on 15 of the most popular genres aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional.
+**The dataset includes 114 genre labels**, many of which exhibit high stylistic overlap. To ensure statistical robustness, **we focused the analysis on 15 of the most popular genres** aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional.
 
 ![](genre%20groups.png){fig-align="center" width="82%"}
 
@@ -126,6 +130,8 @@ df_grouped %>%
   count(genre_group) %>%
   arrange(desc(n))
 ```
+
+Each aggregated genre group contains 5,000 observations, indicating a balanced dataset for analysis. This is ideal because the classification accuracy will not be toward a certain class.
 
 ### 3. Selecting the features chosen from the grouped dataset
 
@@ -261,7 +267,7 @@ In DFA, highly redundant variables can lead to unstable coefficient estimates an
 
 ### 6. MANOVA Test
 
-To evaluate whether the three genre groups differ in their combined audio feature profiles, a MANOVA was conducted using a Wilks' Lambda test statistic. Unlike univariate ANOVAs, MANOVA takes the correlation between predictors into account simultaneously, allowing for a more holistic overview and assessment of group separation. Wilks' Lambda test statistics look at the proportion of total variance not described by the group differences.
+**To check whether the genre groups are truly different, we used MANOVA**. Unlike regular ANOVA, it looks at all audio features together instead of one at a time. Wilks’ Lambda tells us how similar the groups are. A smaller value means the groups are more different and easier to separate.
 
 ```{r}
 # Performing MANOVA to test whether genre groups differ across audio features
