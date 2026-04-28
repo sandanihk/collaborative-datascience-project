@@ -111,7 +111,9 @@ df_grouped <- df %>%
   ))
 ```
 
-The dataset includes 114 genre labels, many of which exhibit high stylistic overlap. To ensure statistical robustness, we focused the analysis on 15 of the most popular genres aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional."
+The dataset includes 114 genre labels, many of which exhibit high stylistic overlap. To ensure statistical robustness, we focused the analysis on 15 of the most popular genres aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional.
+
+![](genre groups.png){fig-align="center" width="82%"}
 
 **Checking group balance**
 
@@ -535,6 +537,80 @@ qda_results$cv_accuracy
 The QDA model yielded an accuracy of about 66%, which is lower than the LDA model (\~71%). This lower accuracy performance suggests that the added complexity of the QDA model may be leading to overfitting or that the assumption of equal covariance (required for LDA) is sufficiently met by this dataset.
 
 ```{r}
+plot_qda_boundary <- function(qda_result, training_data, target_column_name,
+                              x_feature, y_feature) {
+  
+  # Get fitted QDA model
+  model <- qda_result$model
+  
+  # Create grid across two selected features
+  grid <- expand.grid(
+    x = seq(min(training_data[[x_feature]]), max(training_data[[x_feature]]), length.out = 200),
+    y = seq(min(training_data[[y_feature]]), max(training_data[[y_feature]]), length.out = 200)
+  )
+  
+  names(grid) <- c(x_feature, y_feature)
+  
+  # Fill all other predictor variables with their mean values
+  predictor_names <- setdiff(names(training_data), target_column_name)
+  other_features <- setdiff(predictor_names, c(x_feature, y_feature))
+  
+  for (feature in other_features) {
+    grid[[feature]] <- mean(training_data[[feature]], na.rm = TRUE)
+  }
+  
+  # Make sure columns are in the same order as training predictors
+  grid <- grid[, predictor_names]
+  
+  # Predict class for each grid point
+  grid$predicted_class <- predict(model, newdata = grid)$class
+  
+  # Plot QDA decision regions with actual training points
+  ggplot2::ggplot() +
+    ggplot2::geom_tile(
+      data = grid,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        fill = predicted_class
+      ),
+      alpha = 0.25
+    ) +
+    ggplot2::geom_point(
+      data = training_data,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        color = .data[[target_column_name]]
+      ),
+      size = 0.7,
+      alpha = 0.6
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "QDA Decision Boundary Plot",
+      subtitle = paste(x_feature, "vs", y_feature),
+      x = x_feature,
+      y = y_feature,
+      fill = "Predicted Class",
+      color = "Actual Class"
+    )
+}
+```
+
+```{r}
+qda_plot <- plot_qda_boundary(
+  qda_result = qda_results,
+  training_data = training_and_test_data$training_data,
+  target_column_name = "genre_group",
+  x_feature = "energy",
+  y_feature = "acousticness"
+)
+
+qda_plot
+```
+
+```{r}
 plot_confusion_matrix(qda_results$confusion_matrix, title = "QDA Confusion Matrix")
 ```
 
@@ -634,6 +710,74 @@ Since FDA adds significant computational complexity without a gain in predictive
 
 ```{r}
 plot_confusion_matrix(fda_results$confusion_matrix, title = "FDA Confusion Matrix")
+```
+
+```{r}
+plot_fda_boundary <- function(fda_result, training_data, target_column_name,
+                              x_feature, y_feature) {
+  
+  model <- fda_result$model
+  
+  grid <- expand.grid(
+    x = seq(min(training_data[[x_feature]]), max(training_data[[x_feature]]), length.out = 200),
+    y = seq(min(training_data[[y_feature]]), max(training_data[[y_feature]]), length.out = 200)
+  )
+  
+  names(grid) <- c(x_feature, y_feature)
+  
+  predictor_names <- setdiff(names(training_data), target_column_name)
+  other_features <- setdiff(predictor_names, c(x_feature, y_feature))
+  
+  for (feature in other_features) {
+    grid[[feature]] <- mean(training_data[[feature]], na.rm = TRUE)
+  }
+  
+  grid <- grid[, predictor_names]
+  
+  grid$predicted_class <- predict(model, newdata = grid)
+  
+  ggplot2::ggplot() +
+    ggplot2::geom_tile(
+      data = grid,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        fill = predicted_class
+      ),
+      alpha = 0.25
+    ) +
+    ggplot2::geom_point(
+      data = training_data,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        color = .data[[target_column_name]]
+      ),
+      size = 0.7,
+      alpha = 0.6
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "FDA Decision Boundary Plot",
+      subtitle = paste(x_feature, "vs", y_feature),
+      x = x_feature,
+      y = y_feature,
+      fill = "Predicted Class",
+      color = "Actual Class"
+    )
+}
+```
+
+```{r}
+fda_plot <- plot_fda_boundary(
+  fda_result = fda_results,
+  training_data = training_and_test_data$training_data,
+  target_column_name = "genre_group",
+  x_feature = "energy",
+  y_feature = "acousticness"
+)
+
+fda_plot
 ```
 
 ### 12. Model Comparison
