@@ -824,7 +824,15 @@ Overall, the {DFAtools} package provides a structured workflow for multivariate 
 
 ## Limitations
 
-While the models from {DFAtools} provide a framework for classification, there are several factors that may constrain interpretation of these results. First, the performance accuracy (\~70%) is a reflection of the inherent overlap between groups in the multivariate space. Any dataset where categories exist on a continuum (i.e, music genres or biological phenotypes) will naturally have intersections at group boundaries that linear or quadratic functions cannot fully resolve. Additionally, while the feature importance rankings provided valuable insight, they indicate a statistical association rather than a causal relationship. Users should interpret these results as a measure of group distinctiveness and variable contribution within their dataset, rather than universal rules for the categories.
+While the models from {DFAtools} provide a framework for classification, there are several factors that may constrain interpretation of these results.
+
+-   **First, the performance accuracy (\~70%) is a reflection of an overlap between groups in the multivariate space.**
+
+-   **Any dataset where categories exist on a continuum (i.e, music genres or biological phenotypes) will naturally have intersections at group boundaries that linear or quadratic functions cannot fully resolve.**
+
+-   **Additionally, while the feature importance rankings provided valuable insight, they indicate a statistical association rather than a causal relationship.**
+
+-   **Users should interpret these results as a measure of group distinctiveness and variable contribution within their dataset, rather than universal rules for the categories.**
 
 ## How to use the DFATools package
 
