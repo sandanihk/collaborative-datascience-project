@@ -638,7 +638,7 @@ plot_confusion_matrix(fda_results$confusion_matrix, title = "FDA Confusion Matri
 
 ### 12. Model Comparison
 
-To conclude the analysis, the classification performance of the three models (LDA, QDA, and FDA) are compared. This comparison is essential to determine whether our dataset is best captured by linear, quadratic, or flexible, non-linear boundaries.
+To conclude the analysis, the classification performance of the three models (LDA, QDA, and FDA) are compared. This comparison is essential to determine whether our dataset is best captured by linear, quadratic, or flexible, non-linear boundaries
 
 ```{r}
 # Creating data frame for model comparison results
