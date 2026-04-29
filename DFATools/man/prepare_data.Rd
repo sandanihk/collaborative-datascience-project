@@ -34,7 +34,13 @@ This function splits a dataset into training and testing data, and also optional
 ,the centering and the scaling parameters are estimated from the training data and then aopplied to both training and test data after splitting to avoid data leakage.
 }
 \examples{
-prepare_data(data = iris, target_column_name = "Species", training_propotion_size = 0.8)
-prepare_data(data = iris, target_column_name = "Species",training_propotion_size = 0.8, scale = FALSE)
+prepare_data(
+  data = iris, target_column_name = "Species",
+  training_propotion_size = 0.8
+)
+prepare_data(
+  data = iris, target_column_name = "Species",
+  training_propotion_size = 0.8, scale = FALSE
+)
 }
 \keyword{discriminant-function-analysis}
