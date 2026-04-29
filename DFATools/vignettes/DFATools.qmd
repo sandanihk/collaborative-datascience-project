@@ -4,6 +4,11 @@ format: html
 editor: visual
 authors: Qiaoyun Ai, Prabhani Athukorala, and Sandani Kottegoda
 date: 04/27/26
+
+vignette: >
+  %\VignetteIndexEntry{DFATools Vignette}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ## **Discriminant Function Analysis (DFA)**
@@ -21,13 +26,13 @@ We explore three related approaches:
 
 1.  **Linear Discriminant Analysis (LDA):** This assumes that all classes share a common covariance structure and produces linear decision boundaries. This makes the model simple, stable, and interpretable.
 
-    ![](Reference_image_1.png)
+    ![](images/Reference_image_1.png)
 
 2.  **Quadratic Discriminant Analysis (QDA):** This relaxes this assumption by allowing each class to have its own covariance matrix, resulting in nonlinear (quadratic) decision boundaries. More flexible.
 
 3.  **Flexible Discriminant Analysis (FDA):** This extends LDA by incorporating nonlinear transformations, enabling more complex decision boundaries at the cost of reduced interpretability.
 
-![](Reference_image_2.png)
+![](images/Reference_image_2.png)
 
 ### About the {DFATools} Package:
 
@@ -52,7 +57,7 @@ We explore three related approaches:
 
 The dataset contains information about Spotify tracks from 114 different genres, originally curated by Maharshi Pandya (via [Hugging Face](https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset)) and hosted on [Kaggle](https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data). There are 19 variables in the dataset, including `artist` (name of the track artist), `album_name` (the album the track is from), `track_name` (name of the track), `popularity` (the popularity of the track on Spotify from 0 - 100), `duration_ms` (length of the track in milliseconds, `track_genre` (the genre of the track), as well as variables for audio attributes.
 
-![](spotify_icon.png){fig-align="center" width="257"}
+![](images/spotify_icon.png){fig-align="center" width="267"}
 
 ### Preliminaries
 
@@ -60,7 +65,6 @@ The dataset contains information about Spotify tracks from 114 different genres,
 # Loading in necessary packages
 
 library(DFATools)
-library(tidyverse)
 library(caret)
 library(corrplot)
 library(knitr)
@@ -72,6 +76,8 @@ library(mda)
 ```{r}
 df <- read_csv("https://raw.githubusercontent.com/sandanihk/collaborative-datascience-project/refs/heads/main/Spotify%20Tracks%20Genre.csv", col_names = TRUE)
 ```
+
+This dataset is also built in to this {DFATools} package. You can simply call the dataset by calling `spotify_data` .
 
 ### 1. Feature Selection
 
@@ -117,7 +123,7 @@ df_grouped <- df %>%
 
 **The dataset includes 114 genre labels**, many of which exhibit high stylistic overlap. To ensure statistical robustness, **we focused the analysis on 15 of the most popular genres** aggregated into three broad categories: "Rock & Metal", "Electronic & Pop", and "Acoustic & Traditional.
 
-![](genre%20groups.png){fig-align="center" width="82%"}
+![](images/genre_groups.png)
 
 **Checking group balance**
 
