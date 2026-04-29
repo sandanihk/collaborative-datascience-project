@@ -276,7 +276,7 @@ run_qda_model <- function(training_data, test_data, target_column_name) {
 #' @param test_data A data frame containing the test data.
 #' @param target_column_name A character string specifying the categorical response variable name.
 #' @param cv_folds Number of cross-validation folds. Default is 10.
-#'
+#' @param seed An integer used to ensure reproducibility
 #' @keywords fda classification cross-validation
 #'
 #' @return A list containing:
@@ -286,7 +286,7 @@ run_qda_model <- function(training_data, test_data, target_column_name) {
 #' \item{accuracy}{The test set accuracy.}
 #' \item{cv_model}{The caret cross-validation model output.}
 #' \item{cv_accuracy}{The cross-validation accuracy.}
-#'
+
 #' @export
 #'
 #' @examples
@@ -395,3 +395,37 @@ plot_confusion_matrix <- function(confusion_matrix, title = "Confusion Matrix He
     )
 }
 
+#' Spotify Dataset
+#'
+#' A dataset containing Spotify track features used for discriminant analysis.
+#'
+#' @format A data frame with multiple variables:
+#' \describe{
+#'   \item{acousticness}{Numeric (0–1)}
+#'   \item{album_name}{Character}
+#'   \item{artists}{Character}
+#'   \item{danceability}{Numeric (0–1)}
+#'   \item{duration_ms}{Numeric}
+#'   \item{energy}{Numeric (0–1)}
+#'   \item{explicit}{Logical}
+#'   \item{instrumentalness}{Numeric (0–1)}
+#'   \item{key}{Integer}
+#'   \item{liveness}{Numeric}
+#'   \item{loudness}{Numeric (dB)}
+#'   \item{mode}{Integer}
+#'   \item{popularity}{Integer (0–100)}
+#'   \item{speechiness}{Numeric (0–1)}
+#'   \item{tempo}{Numeric}
+#'   \item{time_signature}{Integer}
+#'   \item{track_genre}{Character}
+#'   \item{track_id}{Character}
+#'   \item{track_name}{Character}
+#'   \item{valence}{Numeric}
+#' }
+#'
+"spotify_data"
+
+#' LazyData: true
+#' LazyDataCompression: xz
+#' VignetteBuilder: quarto
+#' Suggests: quarto
