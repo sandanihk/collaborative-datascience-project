@@ -20,6 +20,8 @@ run_fda_model(
 \item{target_column_name}{A character string specifying the categorical response variable name.}
 
 \item{cv_folds}{Number of cross-validation folds. Default is 10.}
+
+\item{seed}{An integer used to ensure reproducibility}
 }
 \value{
 A list containing:
