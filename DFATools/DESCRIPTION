@@ -1,9 +1,18 @@
 Package: DFATools
-Title: What the Package Does (One Line, Title Case)
+Title: Discriminant Function Analysis for Multivariate Classification
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    c(
+      person("Prabhani", "Athukorala", email = "pha268@my.utexas.edu", role = c("aut", "cre")),
+      person("Qiaoyun", "Ai", role = "aut"),
+      person("Sandani", "Kottegoda", role = "aut")
+    )
+Description: DFATools provides a structured workflow for performing discriminant function analysis (DFA) 
+    on multivariate datasets. The package supports Linear Discriminant Analysis (LDA), 
+    Quadratic Discriminant Analysis (QDA), and Flexible Discriminant Analysis (FDA), 
+    along with data preprocessing, model evaluation, cross-validation, and visualization tools. 
+    It is designed to help users classify groups and interpret feature contributions 
+    in applications such as music genre classification using audio features.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

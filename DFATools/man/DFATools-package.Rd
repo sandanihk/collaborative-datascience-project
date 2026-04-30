@@ -4,12 +4,18 @@
 \name{DFATools-package}
 \alias{DFATools}
 \alias{DFATools-package}
-\title{DFATools: What the Package Does (One Line, Title Case)}
+\title{DFATools: Discriminant Function Analysis for Multivariate Classification}
 \description{
-What the package does (one paragraph).
+DFATools provides a structured workflow for performing discriminant function analysis (DFA) on multivariate datasets. The package supports Linear Discriminant Analysis (LDA), Quadratic Discriminant Analysis (QDA), and Flexible Discriminant Analysis (FDA), along with data preprocessing, model evaluation, cross-validation, and visualization tools. It is designed to help users classify groups and interpret feature contributions in applications such as music genre classification using audio features.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Prabhani Athukorala \email{pha268@my.utexas.edu}
+
+Authors:
+\itemize{
+  \item Qiaoyun Ai
+  \item Sandani Kottegoda
+}
 
 }
 \keyword{internal}
