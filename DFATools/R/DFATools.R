@@ -409,6 +409,213 @@ plot_confusion_matrix <- function(confusion_matrix, title = "Confusion Matrix He
     )
 }
 
+#' Plot QDA Decision Boundaries
+#'
+#' Visualizes decision boundaries from a Quadratic Discriminant Analysis (QDA) model
+#' using two selected predictor features. The function generates a grid over the
+#' specified feature space, predicts class labels for each grid point, and displays
+#' the resulting decision regions along with the original training data points.
+#'
+#' All other predictor variables (except the selected two features) are held constant
+#' at their mean values to isolate the effect of the chosen feature pair.
+#'
+#' @param qda_result A trained QDA model object containing a fitted model
+#'   (typically from MASS::qda or a wrapper list with a `model` element).
+#' @param training_data A data frame used to train the model, including predictors
+#'   and the target variable.
+#' @param target_column_name A character string specifying the name of the target
+#'   (class) column in `training_data`.
+#' @param x_feature A character string specifying the feature to plot on the x-axis.
+#' @param y_feature A character string specifying the feature to plot on the y-axis.
+#'
+#' @return A ggplot2 object showing the QDA decision regions and training data points.
+#'
+#' @details
+#' The function constructs a dense grid across the range of the two selected features.
+#' For all remaining predictors, mean values from the training data are used. Predictions
+#' are then made for each grid point to approximate the nonlinear decision boundaries
+#' characteristic of QDA.
+#'
+#' @examples
+#' \dontrun{
+#' library(MASS)
+#' data(iris)
+#' model <- qda(Species ~ ., data = iris)
+#'
+#' qda_result <- list(model = model)
+#'
+#' plot_qda_boundary(
+#'   qda_result,
+#'   training_data = iris,
+#'   target_column_name = "Species",
+#'   x_feature = "Sepal.Length",
+#'   y_feature = "Sepal.Width"
+#' )
+#' }
+#'
+#' @importFrom ggplot2 ggplot geom_tile geom_point aes theme_minimal labs
+#' @export
+
+plot_qda_boundary <- function(qda_result, training_data, target_column_name,
+                              x_feature, y_feature) {
+
+  # Fitting the QDA model
+  model <- qda_result$model
+
+  # Creating grid across two selected features (acousticness and energy)
+  grid <- expand.grid(
+    x = seq(min(training_data[[x_feature]]), max(training_data[[x_feature]]), length.out = 200),
+    y = seq(min(training_data[[y_feature]]), max(training_data[[y_feature]]), length.out = 200)
+  )
+
+  names(grid) <- c(x_feature, y_feature)
+
+  # Filling all other predictor variables with their mean values
+  predictor_names <- setdiff(names(training_data), target_column_name)
+  other_features <- setdiff(predictor_names, c(x_feature, y_feature))
+
+  for (feature in other_features) {
+    grid[[feature]] <- mean(training_data[[feature]], na.rm = TRUE)
+  }
+
+  grid <- grid[, predictor_names]
+
+  # Predicting class for each grid point
+  grid$predicted_class <- predict(model, newdata = grid)$class
+
+  # Plotting QDA decision regions with actual training points
+  ggplot2::ggplot() +
+    ggplot2::geom_tile(
+      data = grid,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        fill = predicted_class
+      ),
+      alpha = 0.25
+    ) +
+    ggplot2::geom_point(
+      data = training_data,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        color = .data[[target_column_name]]
+      ),
+      size = 0.7,
+      alpha = 0.6
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "QDA Decision Boundaries",
+      subtitle = paste(x_feature, "vs", y_feature),
+      x = x_feature,
+      y = y_feature,
+      fill = "Predicted Class",
+      color = "Actual Class"
+    )
+}
+
+#' Plot FDA Decision Boundaries
+#'
+#' Visualizes decision boundaries from a Flexible Discriminant Analysis (FDA) model
+#' using two selected predictor features. The function creates a grid over the
+#' selected feature space, predicts class labels for each grid point, and displays
+#' the resulting decision regions along with the original training data.
+#'
+#' All remaining predictor variables (except the selected two features) are held
+#' constant at their mean values to isolate the effect of the chosen feature pair.
+#'
+#' @param fda_result A trained FDA model object containing a fitted model
+#'   (typically from mda::fda or a wrapper list with a `model` element).
+#' @param training_data A data frame used to train the model, including predictors
+#'   and the target variable.
+#' @param target_column_name A character string specifying the name of the target
+#'   (class) column in `training_data`.
+#' @param x_feature A character string specifying the feature to plot on the x-axis.
+#' @param y_feature A character string specifying the feature to plot on the y-axis.
+#'
+#' @return A ggplot2 object showing the FDA decision regions and training data points.
+#'
+#' @details
+#' The function constructs a dense grid across the range of the two selected features.
+#' Predictions are generated using the fitted FDA model for each grid point. Unlike
+#' QDA, FDA can model more flexible, nonlinear decision boundaries depending on the
+#' basis functions used in training.
+#'
+#' @examples
+#' \dontrun{
+#' library(mda)
+#' data(iris)
+#'
+#' model <- fda(Species ~ ., data = iris)
+#' fda_result <- list(model = model)
+#'
+#' plot_fda_boundary(
+#'   fda_result,
+#'   training_data = iris,
+#'   target_column_name = "Species",
+#'   x_feature = "Sepal.Length",
+#'   y_feature = "Sepal.Width"
+#' )
+#' }
+#'
+#' @importFrom ggplot2 ggplot geom_tile geom_point aes theme_minimal labs
+#' @export
+
+plot_fda_boundary <- function(fda_result, training_data, target_column_name,
+                              x_feature, y_feature) {
+
+  model <- fda_result$model
+
+  grid <- expand.grid(
+    x = seq(min(training_data[[x_feature]]), max(training_data[[x_feature]]), length.out = 200),
+    y = seq(min(training_data[[y_feature]]), max(training_data[[y_feature]]), length.out = 200)
+  )
+
+  names(grid) <- c(x_feature, y_feature)
+
+  predictor_names <- setdiff(names(training_data), target_column_name)
+  other_features <- setdiff(predictor_names, c(x_feature, y_feature))
+
+  for (feature in other_features) {
+    grid[[feature]] <- mean(training_data[[feature]], na.rm = TRUE)
+  }
+
+  grid <- grid[, predictor_names]
+
+  grid$predicted_class <- predict(model, newdata = grid)
+
+  ggplot2::ggplot() +
+    ggplot2::geom_tile(
+      data = grid,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        fill = predicted_class
+      ),
+      alpha = 0.25
+    ) +
+    ggplot2::geom_point(
+      data = training_data,
+      ggplot2::aes(
+        x = .data[[x_feature]],
+        y = .data[[y_feature]],
+        color = .data[[target_column_name]]
+      ),
+      size = 0.7,
+      alpha = 0.6
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "FDA Decision Boundaries",
+      subtitle = paste(x_feature, "vs", y_feature),
+      x = x_feature,
+      y = y_feature,
+      fill = "Predicted Class",
+      color = "Actual Class"
+    )
+}
+
 #' Spotify Dataset
 #'
 #' A dataset containing Spotify track features used for discriminant analysis.
