@@ -87,6 +87,7 @@ To begin the analysis, the numeric predictor variables are selected. 5 key audio
 This selection was made to maximize the variance explained across the dimensions of music composition. By excluding redundant variables (e.g., loudness), we ensure that the DFA identifies significant boundaries between genre groups.
 
 ```{r}
+
 # Creating a vector for selected audio features
 
 audio_features <- c(
