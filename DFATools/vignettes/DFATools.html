@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-04-27">
+
+<title>Discriminant Function Analysis for Music Genre Classification</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="DFATools_files/libs/clipboard/clipboard.min.js"></script>
+<script src="DFATools_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="DFATools_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="DFATools_files/libs/quarto-html/popper.min.js"></script>
+<script src="DFATools_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="DFATools_files/libs/quarto-html/anchor.min.js"></script>
+<link href="DFATools_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="DFATools_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="DFATools_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="DFATools_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="DFATools_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Discriminant Function Analysis for Music Genre Classification</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Qiaoyun Ai, Prabhani Athukorala, and Sandani Kottegoda </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 27, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="discriminant-function-analysis-dfa" class="level2">
+<h2 class="anchored" data-anchor-id="discriminant-function-analysis-dfa"><strong>Discriminant Function Analysis (DFA)</strong></h2>
+<ul>
+<li>Discriminant Function Analysis (DFA) is a statistical method that identifies combinations of features that best separate predefined groups.</li>
+<li>It works by finding new axes (called discriminant functions) that maximize the separation between groups while minimizing variation within groups.</li>
+<li>DFA is useful for:
+<ol type="1">
+<li>Classification problems</li>
+<li>Dimensionality reduction</li>
+<li>Understanding which variables drive group differences</li>
+</ol></li>
+</ul>
+<section id="discriminant-function-analysis-methods" class="level3">
+<h3 class="anchored" data-anchor-id="discriminant-function-analysis-methods">Discriminant function analysis methods</h3>
+<p>We explore three related approaches:</p>
+<ol type="1">
+<li><p><strong>Linear Discriminant Analysis (LDA):</strong> This assumes that all classes share a common covariance structure and produces linear decision boundaries. This makes the model simple, stable, and interpretable.</p>
+<p><img src="images/Reference_image_1.png" class="img-fluid"></p></li>
+<li><p><strong>Quadratic Discriminant Analysis (QDA):</strong> This relaxes this assumption by allowing each class to have its own covariance matrix, resulting in nonlinear (quadratic) decision boundaries. More flexible.</p></li>
+<li><p><strong>Flexible Discriminant Analysis (FDA):</strong> This extends LDA by incorporating nonlinear transformations, enabling more complex decision boundaries at the cost of reduced interpretability.</p></li>
+</ol>
+<p><img src="images/Reference_image_2.png" class="img-fluid"></p>
+</section>
+<section id="about-the-dfatools-package" class="level3">
+<h3 class="anchored" data-anchor-id="about-the-dfatools-package">About the {DFATools} Package:</h3>
+<ul>
+<li><code>prepare_data()</code>: Prepares data for modeling.</li>
+<li><code>run_lda_model()</code>: Runs LDA model.</li>
+<li><code>run_qda_model()</code>: Runs QDA model.</li>
+<li><code>run_fda_model()</code>: Runs FDA model.</li>
+<li><code>plot_confusion_matrix()</code>: Plots a confusion matrix.</li>
+</ul>
+</section>
+</section>
+<section id="background---dataset" class="level2">
+<h2 class="anchored" data-anchor-id="background---dataset">Background - Dataset</h2>
+<ul>
+<li>Music genres are categories that classify tracks based on shared audio characteristics such as acousticness, energy, and rhythm. However, with modern datasets containing hundreds of overlapping genres, formal classification can become complex.</li>
+<li>To streamline this process, we developed the {DFATools} package, which provides an integrated workflow for data preparation, modeling, and evaluation.</li>
+</ul>
+</section>
+<section id="research-questions" class="level2">
+<h2 class="anchored" data-anchor-id="research-questions">Research questions:</h2>
+<ul>
+<li>Can we accurately classify music into broad genre groups using audio features?</li>
+<li>Do genre categories differ significantly in their audio characteristics?</li>
+<li>Which specific audio features contribute most significantly to the discrimination between genres?</li>
+</ul>
+</section>
+<section id="data-description" class="level2">
+<h2 class="anchored" data-anchor-id="data-description">Data description</h2>
+<p>The dataset contains information about Spotify tracks from 114 different genres, originally curated by Maharshi Pandya (via <a href="https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset">Hugging Face</a>) and hosted on <a href="https://www.kaggle.com/datasets/thedevastator/spotify-tracks-genre-dataset/data">Kaggle</a>. There are 19 variables in the dataset, including <code>artist</code> (name of the track artist), <code>album_name</code> (the album the track is from), <code>track_name</code> (name of the track), <code>popularity</code> (the popularity of the track on Spotify from 0 - 100), <code>duration_ms</code> (length of the track in milliseconds, <code>track_genre</code> (the genre of the track), as well as variables for audio attributes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/spotify_icon.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="267"></p>
+</figure>
+</div>
+<section id="preliminaries" class="level3">
+<h3 class="anchored" data-anchor-id="preliminaries">Preliminaries</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loading in necessary packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DFATools)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: ggplot2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: lattice</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>corrplot 0.95 loaded</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mda)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: class</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loaded mda 0.5-5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.2.1     ✔ readr     2.1.6
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ lubridate 1.9.4     ✔ tibble    3.3.1
+✔ purrr     1.2.1     ✔ tidyr     1.3.2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+✖ purrr::lift()   masks caret::lift()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+</div>
+</section>
+<section id="loading-the-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="loading-the-dataset">Loading the dataset</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://raw.githubusercontent.com/sandanihk/collaborative-datascience-project/refs/heads/main/Spotify%20Tracks%20Genre.csv"</span>, <span class="at">col_names =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 114000 Columns: 21
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (5): track_id, artists, album_name, track_name, track_genre
+dbl (15): Unnamed: 0, popularity, duration_ms, danceability, energy, key, lo...
+lgl  (1): explicit
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+</div>
+<p>This dataset is also built in to this {DFATools} package. You can simply call the dataset by calling <code>spotify_data</code> .</p>
+</section>
+<section id="feature-selection" class="level3">
+<h3 class="anchored" data-anchor-id="feature-selection">1. Feature Selection</h3>
+<p>To begin the analysis, the numeric predictor variables are selected. 5 key audio features: energy, acousticness, speechiness, danceability, and instrumentalness, were selected from the dataset to serve as predictors.</p>
+<p>This selection was made to maximize the variance explained across the dimensions of music composition. By excluding redundant variables (e.g., loudness), we ensure that the DFA identifies significant boundaries between genre groups.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating a vector for selected audio features</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>audio_features <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"energy"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"acousticness"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"speechiness"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"danceability"</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"instrumentalness"</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This selection was made to maximize the variance explained across the dimensions of music composition while minimizing multicollinearity. By excluding redundant variables (e.g., <code>loudness</code>), we ensure that the DFA identifies significant boundaries between genre groups.</p>
+<p><code>energy</code> measures the intensity of the track, ranging from 0 to 1. <code>acousticness</code> represents the likelihood that the track was created with natural, non-amplified instruments, ranging from 0 to 1. <code>speechiness</code> scores the presence of spoken word, ranging from 0 to 1. <code>danceability</code> measures how suitable a track is for dancing, ranging from 0 to 1. <code>instrumentalness</code> reflects the likelihood of the track being instrumental rather than vocal-oriented. 0 is the minimum and 1 is the maximum for all the variables.</p>
+</section>
+<section id="genre-grouping" class="level3">
+<h3 class="anchored" data-anchor-id="genre-grouping">2. Genre Grouping</h3>
+<p>To reduce the complexity of the classification task, certain genres were grouped into broader categories to improve class separability and interpretability.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtering the genres of interest and grouping them</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>df_grouped <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">filter</span>(track_genre <span class="sc">%in%</span> <span class="fu">c</span>(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"rock"</span>, <span class="st">"metal"</span>, <span class="st">"hard-rock"</span>, <span class="st">"punk"</span>, <span class="st">"alternative"</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pop"</span>, <span class="st">"hip-hop"</span>, <span class="st">"dance"</span>, <span class="st">"house"</span>, <span class="st">"techno"</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"acoustic"</span>, <span class="st">"classical"</span>, <span class="st">"jazz"</span>, <span class="st">"folk"</span>, <span class="st">"blues"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">genre_group =</span> <span class="fu">case_when</span>(</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    track_genre <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"rock"</span>, <span class="st">"metal"</span>, <span class="st">"hard-rock"</span>, <span class="st">"punk"</span>, <span class="st">"alternative"</span>) <span class="sc">~</span> <span class="st">"Rock &amp; Metal"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    track_genre <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"pop"</span>, <span class="st">"hip-hop"</span>, <span class="st">"dance"</span>, <span class="st">"house"</span>, <span class="st">"techno"</span>) <span class="sc">~</span> <span class="st">"Electronic &amp; Pop"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    track_genre <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"acoustic"</span>, <span class="st">"classical"</span>, <span class="st">"jazz"</span>, <span class="st">"folk"</span>, <span class="st">"blues"</span>) <span class="sc">~</span> <span class="st">"Acoustic &amp; Traditional"</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>The dataset includes 114 genre labels</strong>, many of which exhibit high stylistic overlap. To ensure statistical robustness, <strong>we focused the analysis on 15 of the most popular genres</strong> aggregated into three broad categories: “Rock &amp; Metal”, “Electronic &amp; Pop”, and “Acoustic &amp; Traditional.</p>
+<p><img src="images/genre_groups.png" class="img-fluid"></p>
+<p><strong>Checking group balance</strong></p>
+<p>For the analysis, we should ensure that each class has approximately similar number of observations to avoid biased model training.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Determining the amount of data in each group</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>df_grouped <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(genre_group) <span class="sc">%&gt;%</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  genre_group                n
+  &lt;chr&gt;                  &lt;int&gt;
+1 Acoustic &amp; Traditional  5000
+2 Electronic &amp; Pop        5000
+3 Rock &amp; Metal            5000</code></pre>
+</div>
+</div>
+<p>Each aggregated genre group contains 5,000 observations, indicating a balanced dataset for analysis. This is ideal because the classification accuracy will not be toward a certain class.</p>
+</section>
+<section id="selecting-the-features-chosen-from-the-grouped-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="selecting-the-features-chosen-from-the-grouped-dataset">3. Selecting the features chosen from the grouped dataset</h3>
+<p>Here, the final dataset is constructed for the analysis, containing the predictors (i.e., the audio features) and the categorical target variable (i.e, grouped genre).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subsetting the dataset using defined audio features and target variable</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>df_model <span class="ot">&lt;-</span> df_grouped <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(audio_features), genre_group) <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="function-for-preparing-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="function-for-preparing-the-data">4. Function for preparing the data</h3>
+<p>The <code>prepare_data()</code> function combines several preprocessing steps into one workflow: removing missing values, converting the response variable into a factor, splitting the data into training and testing sets, and optionally standardizing the predictors.</p>
+<p>To evaluate model generalization, the dataset is split into training and testing sets. To ensure all predictor variables contribute equally the discriminant functions, they are standardized (centered and scaled) with <code>caret::preProcess</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>prepare_data <span class="ot">&lt;-</span> <span class="cf">function</span>(data, target_column_name, training_propotion_size, <span class="at">scale =</span> <span class="cn">TRUE</span>, <span class="at">seed =</span> <span class="dv">123</span>) {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># First removing missing values in the data</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> tidyr<span class="sc">::</span><span class="fu">drop_na</span>(data)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Keeping the target variable as a factor</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  data[[target_column_name]] <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data[[target_column_name]])</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Then splitting the dataset to train and test sets</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  train_index <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">createDataPartition</span>(</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    data[[target_column_name]],</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> training_propotion_size,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">list =</span> <span class="cn">FALSE</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  training_set_raw <span class="ot">&lt;-</span> data[train_index, ]</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  test_set_raw  <span class="ot">&lt;-</span> data[<span class="sc">-</span>train_index, ]</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Cleaning unused factor levels in the target variable for both train and test sets</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>  training_set_raw[[target_column_name]] <span class="ot">&lt;-</span> <span class="fu">droplevels</span>(training_set_raw[[target_column_name]])</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>  test_set_raw[[target_column_name]]  <span class="ot">&lt;-</span> <span class="fu">droplevels</span>(test_set_raw[[target_column_name]])</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Here, Caret's preProcess function is used to center and scale the numeric predictors based on the training data, and then apply the same transformations to the test data.</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (scale) {</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    training_predictors <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>      training_set_raw,</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>dplyr<span class="sc">::</span><span class="fu">all_of</span>(target_column_name)</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>    test_predictors <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>      test_set_raw,</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>dplyr<span class="sc">::</span><span class="fu">all_of</span>(target_column_name)</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>    preprocess_object <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">preProcess</span>(</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>      training_predictors,</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"center"</span>, <span class="st">"scale"</span>)</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>    training_set_scaled <span class="ot">&lt;-</span> <span class="fu">predict</span>(preprocess_object, training_predictors)</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>    test_set_scaled <span class="ot">&lt;-</span> <span class="fu">predict</span>(preprocess_object, test_predictors)</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>    final_training_data <span class="ot">&lt;-</span> training_set_scaled</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>    final_training_data[[target_column_name]] <span class="ot">&lt;-</span> training_set_raw[[target_column_name]]</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>    final_test_data <span class="ot">&lt;-</span> test_set_scaled</span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>    final_test_data[[target_column_name]] <span class="ot">&lt;-</span> test_set_raw[[target_column_name]]</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>    final_training_data <span class="ot">&lt;-</span> training_set_raw</span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a>    final_test_data  <span class="ot">&lt;-</span> test_set_raw</span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a>    preprocess_object <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">training_data =</span> final_training_data,</span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_data =</span> final_test_data,</span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">preprocess_object =</span> preprocess_object</span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For DFA, the response variable (<code>genre_group)</code> should be converted into a factor to ensure compatibility with classification models, as this will correctly identify the groupings and allow proper matrix partitioning.</p>
+<section id="traintest-split" class="level4">
+<h4 class="anchored" data-anchor-id="traintest-split">Train/Test Split</h4>
+<p>70% of the data are used for training while 30% are used for testing. By allocating 70% of the observations to the training set, the DFA has enough data to estimate how each feature varies and how features relate to each other, which is needed to define stable discriminant functions. The 30% is used to evaluate the model’s predictive accuracy on unseen data. This ratio ensures that the testing phase is statistically meaningful, providing enough samples to generate a confusion matrix, without depriving the training step of data needed to capture underlying patterns in the grouped genres. A train/test ratio of 80/20 would have also been ideal.</p>
+</section>
+<section id="standardizing-the-predictors" class="level4">
+<h4 class="anchored" data-anchor-id="standardizing-the-predictors">Standardizing the Predictors</h4>
+<p>DFA is sensitive to the scale of inputs; variables with larger absolute values can disproportionately influence how the model captures relationships between features, which may mask the contributions of variables on smaller scales. By transforming each predictor to have a mean of zero and a standard deviation of one, we ensure that the model identifies patterns based on the statistical relationship of the features rather than their arbitrary units of measurement. Notably, the scaling parameters were derived from the training set and then applied to the test set to prevent any data leakage.</p>
+<p>Standardization is optional in this function. If <code>scale = FALSE</code>, the function returns the original unscaled training and testing data.</p>
+<p>Below is an example of how you can call the function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>training_and_test_data<span class="ot">&lt;-</span> <span class="fu">prepare_data</span>(df_model, <span class="st">"genre_group"</span>, <span class="fl">0.7</span>, <span class="at">scale =</span> <span class="cn">TRUE</span>, <span class="at">seed =</span> <span class="dv">123</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>training_and_test_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$training_data
+# A tibble: 10,500 × 6
+     energy acousticness speechiness danceability instrumentalness genre_group  
+      &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;            &lt;dbl&gt; &lt;fct&gt;        
+ 1 -0.666        -0.790        1.19         0.672           -0.407 Acoustic &amp; T…
+ 2 -1.83          1.83         0.127       -0.921           -0.407 Acoustic &amp; T…
+ 3 -1.07         -0.268       -0.201       -0.809           -0.407 Acoustic &amp; T…
+ 4 -0.737         0.492       -0.250        0.311           -0.407 Acoustic &amp; T…
+ 5 -1.91          1.63        -0.522       -1.00            -0.407 Acoustic &amp; T…
+ 6  0.00979       0.366       -0.617       -0.784           -0.392 Acoustic &amp; T…
+ 7 -1.05         -0.0658      -0.624        0.367           -0.407 Acoustic &amp; T…
+ 8 -1.29          1.15        -0.404       -0.529           -0.407 Acoustic &amp; T…
+ 9 -1.25          1.31        -0.560       -0.492           -0.407 Acoustic &amp; T…
+10 -1.56          1.40        -0.633        0.765           -0.407 Acoustic &amp; T…
+# ℹ 10,490 more rows
+
+$test_data
+# A tibble: 4,500 × 6
+   energy acousticness speechiness danceability instrumentalness genre_group    
+    &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;            &lt;dbl&gt; &lt;fct&gt;          
+ 1 -2.25        1.77        -0.509      -1.88             -0.407 Acoustic &amp; Tra…
+ 2 -0.587      -0.0365       0.584       0.746            -0.407 Acoustic &amp; Tra…
+ 3 -0.733       0.756       -0.423       0.840            -0.407 Acoustic &amp; Tra…
+ 4 -0.851      -0.0218      -0.500       0.354            -0.407 Acoustic &amp; Tra…
+ 5 -0.271      -0.298       -0.651      -0.492            -0.407 Acoustic &amp; Tra…
+ 6 -1.91        1.63        -0.522      -1.00             -0.407 Acoustic &amp; Tra…
+ 7 -0.693       0.515       -0.676       0.0246           -0.407 Acoustic &amp; Tra…
+ 8 -0.792      -0.754       -0.480       0.404            -0.407 Acoustic &amp; Tra…
+ 9 -1.27        1.43        -0.299       0.323            -0.407 Acoustic &amp; Tra…
+10 -1.67        1.41        -0.431      -1.69             -0.407 Acoustic &amp; Tra…
+# ℹ 4,490 more rows
+
+$preprocess_object
+Created from 10500 samples and 5 variables
+
+Pre-processing:
+  - centered (5)
+  - ignored (0)
+  - scaled (5)</code></pre>
+</div>
+</div>
+</section>
+<section id="correlation-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="correlation-analysis">5. Correlation Analysis</h4>
+<p>Here, we are checking for correlation among predictors, which can negatively affect discriminant analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Computing correlation matrix for predictor variables</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(training_and_test_data<span class="sc">$</span>training_data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>genre_group))</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizing correlations as a heatmap</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix, <span class="at">method =</span> <span class="st">"color"</span>, <span class="at">tl.cex =</span> <span class="fl">0.7</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identifies highly correlated predictors</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>high_corr <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">findCorrelation</span>(cor_matrix, <span class="at">cutoff =</span> <span class="fl">0.90</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If the correlation is high, variable removal may be necessary</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="st">"Identified highly correlated predictors"</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">length</span>(high_corr)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Identified highly correlated predictors</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>In DFA, highly redundant variables can lead to unstable coefficient estimates and variance, as it would struggle to uniquely identify attributes for group separation on specific features. A correlation matrix was generated and visualized as a heatmap to identify pairwise relationships exceeding the cutoff of 0.90. Using <code>caret::findCorrelation</code> allowed us to visualize that no predictors met this threshold (there was no colored squared that indicated &gt; 0.90 between the predictors in our case). This confirms that each audio feature provides unique information, allowing the model to use dataset without redundancy.</p>
+</section>
+</section>
+<section id="manova-test" class="level3">
+<h3 class="anchored" data-anchor-id="manova-test">6. MANOVA Test</h3>
+<p><strong>To check whether the genre groups are truly different, we used MANOVA</strong>. Unlike regular ANOVA, it looks at all audio features together instead of one at a time. Wilks’ Lambda tells us how similar the groups are. A smaller value means the groups are more different and easier to separate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Performing MANOVA to test whether genre groups differ across audio features</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>manova_model <span class="ot">&lt;-</span> <span class="fu">manova</span>(</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>(training_and_test_data<span class="sc">$</span>training_data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>genre_group)) <span class="sc">~</span> genre_group,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> training_and_test_data<span class="sc">$</span>training_data</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarizing MANOVA results using Wilks' Lambda test</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(manova_model, <span class="at">test =</span> <span class="st">"Wilks"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               Df   Wilks approx F num Df den Df    Pr(&gt;F)    
+genre_group     2 0.41221   1170.1     10  20986 &lt; 2.2e-16 ***
+Residuals   10497                                             
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>For our case, the MANOVA test results were highly significant (p &lt; 2.2e-16), indicating that genre groups differ in their combined audio features. The relatively low Wilks’ Lambda (0.412) suggests that about 59% of the variance in the audio features can be explained by the differences in the genre groups. Additionally, this low value provides statistical justification to perform a DFA to model these differences.</p>
+</section>
+<section id="running-a-lda-model" class="level3">
+<h3 class="anchored" data-anchor-id="running-a-lda-model">7. Running a LDA model</h3>
+<p>With MANOVA test confirming group differences, <strong>a LDA model is fitted to the to the training data to classify the groups (i.e.&nbsp;genres). LDA creates linear combination of the predictors to best separate the different groups. For example,</strong></p>
+<p><span class="math display">\[
+LD1​=w1​(energy)+w2​(acousticness)+w3​(danceability)+w4​(speechiness)+w5​(instrumental.)
+\]</span></p>
+<p>Using the <code>run_lda_model()</code> function from the {<strong>DFATools} package</strong>, It fit the model, performs leave-one-out cross-validation, predicts on the test set, creates a confusion matrix, extracts accuracy, and returns an LD1 versus LD2 plot.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Running LDA function</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>run_lda_model <span class="ot">&lt;-</span> <span class="cf">function</span>(training_data, test_data, target_column_name) {</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating the formula for the model</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  formula <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">as.formula</span>(<span class="fu">paste</span>(target_column_name, <span class="st">"~ ."</span>))</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fitting the LDA model usign training data</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">lda</span>(formula, <span class="at">data =</span> training_data)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Leave-One-Out Cross-Validation on training data</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  cv_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">lda</span>(</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    formula,</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> training_data,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">CV =</span> <span class="cn">TRUE</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Computing cross-validation accuracy</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  cv_accuracy <span class="ot">&lt;-</span> <span class="fu">mean</span>(cv_model<span class="sc">$</span>class <span class="sc">==</span> training_data[[target_column_name]])</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Predicting on test data</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> test_data)</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Accuracy evaluation using confusion matrix</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  confusion_matrix <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">confusionMatrix</span>(</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>    predictions<span class="sc">$</span>class,</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>    test_data[[target_column_name]]</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extracting test accuracy</span></span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>  accuracy <span class="ot">&lt;-</span> confusion_matrix<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Projecting training data onto discriminat axes</span></span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a>  lda_values <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> training_data)</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>  lda_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lda_values<span class="sc">$</span>x) <span class="co"># Converting into data frame</span></span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>  lda_df[[target_column_name]] <span class="ot">&lt;-</span> training_data[[target_column_name]]</span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating visualization if two discriminant axes exist</span></span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">ncol</span>(lda_values<span class="sc">$</span>x) <span class="sc">&gt;=</span> <span class="dv">2</span>) {</span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>    plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a>      lda_df,</span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> LD1, <span class="at">y =</span> LD2, <span class="at">color =</span> .data[[target_column_name]])</span>
+<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> <span class="st">"LDA Visualization (LD1 vs LD2)"</span>,</span>
+<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="st">"Linear Discriminant 1"</span>,</span>
+<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"Linear Discriminant 2"</span>,</span>
+<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> target_column_name</span>
+<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># If only one axis exists, a plot is not created</span></span>
+<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb26-57"><a href="#cb26-57" aria-hidden="true" tabindex="-1"></a>    plot <span class="ot">&lt;-</span> <span class="cn">NULL</span> <span class="co"># If this is the case, you can somply plot the x variable against the y variable as a scatterplot</span></span>
+<span id="cb26-58"><a href="#cb26-58" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb26-59"><a href="#cb26-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-60"><a href="#cb26-60" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Returning relevant outputs as a list</span></span>
+<span id="cb26-61"><a href="#cb26-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb26-62"><a href="#cb26-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> model,</span>
+<span id="cb26-63"><a href="#cb26-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">predictions =</span> predictions,</span>
+<span id="cb26-64"><a href="#cb26-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">confusion_matrix =</span> confusion_matrix,</span>
+<span id="cb26-65"><a href="#cb26-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">accuracy =</span> accuracy,</span>
+<span id="cb26-66"><a href="#cb26-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_model =</span> cv_model,</span>
+<span id="cb26-67"><a href="#cb26-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_accuracy =</span> cv_accuracy,</span>
+<span id="cb26-68"><a href="#cb26-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">coefficients =</span> model<span class="sc">$</span>scaling,</span>
+<span id="cb26-69"><a href="#cb26-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot =</span> plot</span>
+<span id="cb26-70"><a href="#cb26-70" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb26-71"><a href="#cb26-71" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="cross-validation" class="level4">
+<h4 class="anchored" data-anchor-id="cross-validation">Cross validation</h4>
+<p>To further assess the discriminant functions, Leave-One-Out Cross-Validation (LOOCV) is done. In this iterative process, the model is trained using all observations except one, which is then used as the single-item “test set” to examine classification accuracy. This process is repeated until every observation serves as the validation point; thus, the number of rounds is determined by the sample size.</p>
+</section>
+<section id="model-evaluation-on-test-data" class="level4">
+<h4 class="anchored" data-anchor-id="model-evaluation-on-test-data">Model evaluation on test data</h4>
+<p>To determine the real-world utility of the discriminant functions, the model is used to predict the genres of the independent test set (30%; <code>test_data</code>). This step is important for verifying that the patterns from the training phase is generalizable to the new, unseen test data.</p>
+</section>
+<section id="lda-visualization" class="level4">
+<h4 class="anchored" data-anchor-id="lda-visualization">LDA visualization</h4>
+<p>To visualize the group separation achieved from the model, the training observations (<code>train_data</code>) are projected onto two discriminant axes (Linear Discriminant 1 vs.&nbsp;Linear Discriminant 2). The resulting scatterplot, enhanced with 68% confidence ellipses, provides a spatial representation of how the model distinguishes the three groups.</p>
+<p>Below is an example of how to run the LDA function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>lda_results <span class="ot">&lt;-</span> <span class="fu">run_lda_model</span>(training_and_test_data<span class="sc">$</span>training_data, training_and_test_data<span class="sc">$</span>test_data, <span class="st">"genre_group"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>lda_results<span class="sc">$</span>model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+lda(formula, data = training_data)
+
+Prior probabilities of groups:
+Acoustic &amp; Traditional       Electronic &amp; Pop           Rock &amp; Metal 
+             0.3333333              0.3333333              0.3333333 
+
+Group means:
+                           energy acousticness speechiness danceability
+Acoustic &amp; Traditional -0.8236072    0.9217077 -0.22350350   -0.3471021
+Electronic &amp; Pop        0.2799734   -0.3792579  0.28336111    0.7071792
+Rock &amp; Metal            0.5436338   -0.5424498 -0.05985762   -0.3600771
+                       instrumentalness
+Acoustic &amp; Traditional       0.20416429
+Electronic &amp; Pop             0.04143928
+Rock &amp; Metal                -0.24560357
+
+Coefficients of linear discriminants:
+                         LD1        LD2
+energy            0.34058804  0.2699048
+acousticness     -0.99402508 -0.1431999
+speechiness       0.08232402 -0.2503323
+danceability      0.16960972 -1.0889464
+instrumentalness  0.02565659 -0.3247153
+
+Proportion of trace:
+   LD1    LD2 
+0.7008 0.2992 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>lda_results<span class="sc">$</span>accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Accuracy 
+0.7048889 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>lda_results<span class="sc">$</span>cv_accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7049524</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>lda_results<span class="sc">$</span>plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="cross-validation-results" class="level4">
+<h4 class="anchored" data-anchor-id="cross-validation-results">Cross-validation results</h4>
+<p><strong>The LOOCV results yielded and accuracy of 0.703, showing that this model correctly classified ~71% of the observations. Since the cross validation accuracy is high, it suggests that the LDA model has captured generalizable musical patterns between the grouped genres.</strong></p>
+<p>The group means provide a profile of the audio characteristics that describe the grouped genres. The Acoustic &amp; Traditional group was characterized by high acousticness (+0.919) and low energy (-0.818). The Electronic &amp; Pop group showed higher danceability (+0.707) and slightly lower acousticness (-0.369). Lastly, Rock &amp; Metal was defined by high energy (+0.551) and low acousticness (-0.550) and danceability (-0.374).</p>
+<p>Ultimately, Rock &amp; Metal represents high-energy, amplified music, Electronic &amp; Pop captures rhythm-driven and dance-oriented styles, while Acoustic &amp; Traditional includes organic, low-energy genres. This grouping is motivated by shared audio characteristics rather than strict genre labels, allowing the models to learn more coherent patterns.</p>
+</section>
+<section id="feature-importance-and-discriminant-coefficients" class="level4">
+<h4 class="anchored" data-anchor-id="feature-importance-and-discriminant-coefficients">Feature importance and discriminant coefficients</h4>
+<p>The LDA model constructed two linear discriminants to maximize group separation: <strong>LD1 and LD2. The primary axis LD1 explains 70% of between-group variance, showing that the groups’ difference is driven mostly by acousticness (strong negative weight) and energy (strong positive weight). The second axis LD2 shows that the remaining 30% of between-group variance is influenced more by danceability (strong negative weight)</strong>.</p>
+<p>To understand the drives behind the model’s classification, the standardized coefficients for the first two discriminants are analyzed. The coefficients represent the relative contribution of each audio feature to the different genre groups.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extracting LDA scaling coefficients</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>lda_coeff <span class="ot">&lt;-</span> lda_results<span class="sc">$</span>model<span class="sc">$</span>scaling</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co"># LD1 importance table</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>ld1_importance <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Feature =</span> <span class="fu">rownames</span>(lda_coeff),</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">LD1_Coefficient =</span> lda_coeff[, <span class="dv">1</span>]</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(LD1_Coefficient)))</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(ld1_importance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: right;">LD1_Coefficient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">acousticness</td>
+<td style="text-align: left;">acousticness</td>
+<td style="text-align: right;">-0.9940251</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">energy</td>
+<td style="text-align: left;">energy</td>
+<td style="text-align: right;">0.3405880</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">danceability</td>
+<td style="text-align: left;">danceability</td>
+<td style="text-align: right;">0.1696097</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">speechiness</td>
+<td style="text-align: left;">speechiness</td>
+<td style="text-align: right;">0.0823240</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">instrumentalness</td>
+<td style="text-align: left;">instrumentalness</td>
+<td style="text-align: right;">0.0256566</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># LD2 importance table, if available</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="fu">ncol</span>(lda_coeff) <span class="sc">&gt;=</span> <span class="dv">2</span>){</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  ld2_importance <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Feature =</span> <span class="fu">rownames</span>(lda_coeff),</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">LD2_Coefficient =</span> lda_coeff[, <span class="dv">2</span>]</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(LD2_Coefficient)))</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(ld2_importance)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: right;">LD2_Coefficient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">danceability</td>
+<td style="text-align: left;">danceability</td>
+<td style="text-align: right;">-1.0889464</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">instrumentalness</td>
+<td style="text-align: left;">instrumentalness</td>
+<td style="text-align: right;">-0.3247153</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">energy</td>
+<td style="text-align: left;">energy</td>
+<td style="text-align: right;">0.2699048</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">speechiness</td>
+<td style="text-align: left;">speechiness</td>
+<td style="text-align: right;">-0.2503323</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">acousticness</td>
+<td style="text-align: left;">acousticness</td>
+<td style="text-align: right;">-0.1431999</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<ul>
+<li><p><strong>The coefficients for LD1 indicate that <code>acousticness</code> was the dominant features driving the primary axis of separation (carrying a large negative weight). On the other hand, <code>energy</code> contributes a strong positive weight.</strong></p></li>
+<li><p><strong>These results confirm that LD1 serves as an axis for musical characteristics like production intensity, effectively isolating Acoustic &amp; Traditional tracks from more energetic, amplified genres.</strong></p></li>
+<li><p><strong>In this multivariate spaces, as <code>acousticness</code> decreases and <code>energy</code> increases, a track’s probability of being classified as Rock &amp; Metal or Electronic &amp; Pop rises significantly.</strong></p></li>
+<li><p><strong>The second discriminant function (LD2) is to separate the other groups. This axis is driven mainly by <code>danceability</code>, with a strong negative coefficient.</strong></p></li>
+<li><p><strong>This indicates that LD2 is the primary tool for distinguishing dance-oriented genres like Electronic &amp; Pop, from less dance-focused genres like Rock &amp; Metal. Other features, such as <code>speechiness</code>, also contribute to the axis.</strong></p></li>
+</ul>
+<p>Overall, the model results demonstrate that genre separation can be structured along interpretable musical dimensions, with <code>acousticness</code> and <code>energy</code> defining the main axis of variation and <code>danceability</code> providing secondary differentiation.</p>
+</section>
+<section id="lda-visualization-results" class="level4">
+<h4 class="anchored" data-anchor-id="lda-visualization-results">LDA visualization results</h4>
+<p><strong>The x-axis (Linear Discriminant 1) served as the strongest separator, distinguishing Acoustic &amp; Traditional from the more modern, high energy groups. The y-axis further refines the classification by separating the Rock &amp; Metal and Electronic &amp; Pop groups. While both groups are relatively high-energy , LD2 captures the differences in the rhythmic and vocal structure</strong>.</p>
+<p>It is important to note that there is overlap between the groups, as some tracks from different genres groups share similar audio characteristics. This proximity in the multivariate space accounts for the missclassification patterns observed in the confusion matrix. This suggests that while these genres are statistically distinct, they exist on a continuum rather than as entirely isolated categories.</p>
+</section>
+<section id="test-accuracy-results" class="level4">
+<h4 class="anchored" data-anchor-id="test-accuracy-results">Test accuracy results</h4>
+<p><strong>The model achieved an accuracy of 70% on the test set, which is very close to the cross-validation accuracy (~71%).</strong> This consistency suggests that the model generalizes well and is not overfitting, meaning that it learned the fundamental characteristics of the genres rather than memorizing.</p>
+<p>Importantly, the accuracy was substantially higher than the chance rate (33%). The MANOVA p-value is also significantly lower. <strong>These results allow us to see that the LDA model performs better than chance rat (33%), and that the audio features (specifically acousticness, energy, and danceability) are suitable predictors of musical genres.</strong></p>
+</section>
+</section>
+<section id="confusion-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="confusion-matrix">8. Confusion matrix</h3>
+<p>To provide a view of model performance, a confusion matrix is generated using <code>plot_confusion_matrix()</code>function in {DFATools} package. <strong>This confusion matrix compares the model’s predicted classifications against the actual/true genre labels</strong>.</p>
+<p>This visualization translates the raw classification counts into a color-coded grid, where the intensity of the color represents the frequency of observations, the rows represent the predicted classes, and the columns are the true classes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting the confusion matrix</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>plot_confusion_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(confusion_matrix, <span class="at">title =</span> <span class="st">"Confusion Matrix Heatmap"</span>) {</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  conf_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(confusion_matrix<span class="sc">$</span>table)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(conf_df, ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> Reference, <span class="at">y =</span> Prediction, <span class="at">fill =</span> Freq)) <span class="sc">+</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_text</span>(ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">label =</span> Freq), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"white"</span>, <span class="at">high =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> title,</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="st">"True Class"</span>,</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> <span class="st">"Predicted Class"</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This is an example of running the plotting the confusion matrix function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_confusion_matrix</span>(lda_results<span class="sc">$</span>confusion_matrix, <span class="at">title =</span> <span class="st">"LDA Confusion Matrix"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In the confusion matrix heatmap, there is a strong diagnol from the bottom-left to top-right, which represents correct classifications. The deep saturation shows that the majority of the tracks in the three categories were assigned to their true genre group, supporting high model precision. The light-shaded spaces reveal the points of confusion. <strong>The most frequent misclassifications occur between Electronic &amp; Pop and Rock &amp; Metal.</strong> The heatmap confirms that these two genres are more likely to be mistaken from one another than for an Acoustic &amp; Traditional track.</p>
+<p>Ultimately, this visualization proves that while the discriminant functions are effective, the inherent blurring on genre boundaries is the primary constraint on their classification.</p>
+</section>
+<section id="qda-model" class="level3">
+<h3 class="anchored" data-anchor-id="qda-model">9. QDA model</h3>
+<p><strong>To evaluate whether a more flexible decision boundary would enhance classification, a QDA is fitted to the data.</strong> While LDA assumes that all genre groups share similar variability and relationships between features, <strong>QDA allows each group to have its own structure, providing a “curved” rather than linear boundary, which is better for capturing complex relationships between audio features.</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to run QDA model and evaluate performance</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>run_qda_model <span class="ot">&lt;-</span> <span class="cf">function</span>(training_data, test_data, target_column_name) {</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating the formula for the model</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  formula <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">as.formula</span>(<span class="fu">paste</span>(target_column_name, <span class="st">"~ ."</span>))</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fitting the QDA model using training data</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">qda</span>(formula, <span class="at">data =</span> training_data)</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Leave-One-Out Cross-Validation on training data</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  cv_model <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">qda</span>(</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>    formula,</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> training_data,</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">CV =</span> <span class="cn">TRUE</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Computing cross-validation accuracy</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>  cv_accuracy <span class="ot">&lt;-</span> <span class="fu">mean</span>(cv_model<span class="sc">$</span>class <span class="sc">==</span> training_data[[target_column_name]])</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Predict on test data</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> test_data)</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Accuracy evaluation using confusion matrix</span></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>  confusion_matrix <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">confusionMatrix</span>(</span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> predictions<span class="sc">$</span>class,</span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">reference =</span> test_data[[target_column_name]]</span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extracting overall test accuracy</span></span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a>  accuracy <span class="ot">&lt;-</span> confusion_matrix<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Returning relevant outputs as a list</span></span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> model,</span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">predictions =</span> predictions,</span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">confusion_matrix =</span> confusion_matrix,</span>
+<span id="cb38-38"><a href="#cb38-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">accuracy =</span> accuracy,</span>
+<span id="cb38-39"><a href="#cb38-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_model =</span> cv_model,</span>
+<span id="cb38-40"><a href="#cb38-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_accuracy =</span> cv_accuracy</span>
+<span id="cb38-41"><a href="#cb38-41" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb38-42"><a href="#cb38-42" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This is an example of how to run the QDA model function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>qda_results <span class="ot">&lt;-</span> <span class="fu">run_qda_model</span>(training_and_test_data<span class="sc">$</span>training_data,training_and_test_data<span class="sc">$</span>test_data,<span class="st">"genre_group"</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>qda_results<span class="sc">$</span>model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+qda(formula, data = training_data)
+
+Prior probabilities of groups:
+Acoustic &amp; Traditional       Electronic &amp; Pop           Rock &amp; Metal 
+             0.3333333              0.3333333              0.3333333 
+
+Group means:
+                           energy acousticness speechiness danceability
+Acoustic &amp; Traditional -0.8236072    0.9217077 -0.22350350   -0.3471021
+Electronic &amp; Pop        0.2799734   -0.3792579  0.28336111    0.7071792
+Rock &amp; Metal            0.5436338   -0.5424498 -0.05985762   -0.3600771
+                       instrumentalness
+Acoustic &amp; Traditional       0.20416429
+Electronic &amp; Pop             0.04143928
+Rock &amp; Metal                -0.24560357</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>qda_results<span class="sc">$</span>accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Accuracy 
+0.6691111 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>qda_results<span class="sc">$</span>cv_accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6602857</code></pre>
+</div>
+</div>
+<p><strong>The QDA model yielded an accuracy of about 66%, which is lower than the LDA model (~71%).</strong> This lower accuracy performance suggests that the added complexity of the QDA model may be leading to overfitting or that the assumption of equal covariance (required for LDA) is sufficiently met by this dataset.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>plot_qda_boundary <span class="ot">&lt;-</span> <span class="cf">function</span>(qda_result, training_data, target_column_name,</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>                              x_feature, y_feature) {</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fitting the QDA model</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> qda_result<span class="sc">$</span>model</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating grid across two selected features (acousticness and energy)</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">seq</span>(<span class="fu">min</span>(training_data[[x_feature]]), <span class="fu">max</span>(training_data[[x_feature]]), <span class="at">length.out =</span> <span class="dv">200</span>),</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">seq</span>(<span class="fu">min</span>(training_data[[y_feature]]), <span class="fu">max</span>(training_data[[y_feature]]), <span class="at">length.out =</span> <span class="dv">200</span>)</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(grid) <span class="ot">&lt;-</span> <span class="fu">c</span>(x_feature, y_feature)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Filling all other predictor variables with their mean values</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>  predictor_names <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(training_data), target_column_name)</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>  other_features <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(predictor_names, <span class="fu">c</span>(x_feature, y_feature))</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (feature <span class="cf">in</span> other_features) {</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>    grid[[feature]] <span class="ot">&lt;-</span> <span class="fu">mean</span>(training_data[[feature]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> grid[, predictor_names]</span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Predicting class for each grid point</span></span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a>  grid<span class="sc">$</span>predicted_class <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> grid)<span class="sc">$</span>class</span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-28"><a href="#cb45-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plotting QDA decision regions with actual training points</span></span>
+<span id="cb45-29"><a href="#cb45-29" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb45-30"><a href="#cb45-30" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_tile</span>(</span>
+<span id="cb45-31"><a href="#cb45-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> grid,</span>
+<span id="cb45-32"><a href="#cb45-32" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb45-33"><a href="#cb45-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> .data[[x_feature]],</span>
+<span id="cb45-34"><a href="#cb45-34" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> .data[[y_feature]],</span>
+<span id="cb45-35"><a href="#cb45-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">fill =</span> predicted_class</span>
+<span id="cb45-36"><a href="#cb45-36" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb45-37"><a href="#cb45-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.25</span></span>
+<span id="cb45-38"><a href="#cb45-38" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb45-39"><a href="#cb45-39" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_point</span>(</span>
+<span id="cb45-40"><a href="#cb45-40" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> training_data,</span>
+<span id="cb45-41"><a href="#cb45-41" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb45-42"><a href="#cb45-42" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> .data[[x_feature]],</span>
+<span id="cb45-43"><a href="#cb45-43" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> .data[[y_feature]],</span>
+<span id="cb45-44"><a href="#cb45-44" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> .data[[target_column_name]]</span>
+<span id="cb45-45"><a href="#cb45-45" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb45-46"><a href="#cb45-46" aria-hidden="true" tabindex="-1"></a>      <span class="at">size =</span> <span class="fl">0.7</span>,</span>
+<span id="cb45-47"><a href="#cb45-47" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.6</span></span>
+<span id="cb45-48"><a href="#cb45-48" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb45-49"><a href="#cb45-49" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb45-50"><a href="#cb45-50" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb45-51"><a href="#cb45-51" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="st">"QDA Decision Boundaries"</span>,</span>
+<span id="cb45-52"><a href="#cb45-52" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="fu">paste</span>(x_feature, <span class="st">"vs"</span>, y_feature),</span>
+<span id="cb45-53"><a href="#cb45-53" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> x_feature,</span>
+<span id="cb45-54"><a href="#cb45-54" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> y_feature,</span>
+<span id="cb45-55"><a href="#cb45-55" aria-hidden="true" tabindex="-1"></a>      <span class="at">fill =</span> <span class="st">"Predicted Class"</span>,</span>
+<span id="cb45-56"><a href="#cb45-56" aria-hidden="true" tabindex="-1"></a>      <span class="at">color =</span> <span class="st">"Actual Class"</span></span>
+<span id="cb45-57"><a href="#cb45-57" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb45-58"><a href="#cb45-58" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>qda_plot <span class="ot">&lt;-</span> <span class="fu">plot_qda_boundary</span>(</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">qda_result =</span> qda_results,</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">training_data =</span> training_and_test_data<span class="sc">$</span>training_data,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_column_name =</span> <span class="st">"genre_group"</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_feature =</span> <span class="st">"energy"</span>,</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">y_feature =</span> <span class="st">"acousticness"</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>qda_plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_confusion_matrix</span>(qda_results<span class="sc">$</span>confusion_matrix, <span class="at">title =</span> <span class="st">"QDA Confusion Matrix"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Additionally, the lower accuracy of the confusion matrix heatmap for the QDA model confirms that increasing the model flexibility does not always result in better predictive power.</p>
+<p>For our case, a linear approach with LDA showed to be more robust and effective in capturing the true signal within the musical features, and remained the preferred model for our classification.</p>
+</section>
+<section id="fda-model" class="level3">
+<h3 class="anchored" data-anchor-id="fda-model">10. FDA model</h3>
+<p><strong>FDA can be done to determine if non-linear transformations of the predictors could improve group separation.</strong> FDA is an extension of LDA and uses non-parametric regression to model the discriminant functions. This allows the model to capture more complex boundaries than a standard linear model might miss.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function for running FDA model</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>run_fda_model <span class="ot">&lt;-</span> <span class="cf">function</span>(training_data, test_data, target_column_name, <span class="at">cv_folds =</span> <span class="dv">10</span>, <span class="at">seed =</span> <span class="dv">123</span>) {</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Setting seed for reproducibility</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating model formuala</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>  formula <span class="ot">&lt;-</span> stats<span class="sc">::</span><span class="fu">as.formula</span>(<span class="fu">paste</span>(target_column_name, <span class="st">"~ ."</span>))</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fitting FDA model on full training data</span></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> mda<span class="sc">::</span><span class="fu">fda</span>(formula, <span class="at">data =</span> training_data)</span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating folds for k-fold cross-validation</span></span>
+<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a>  folds <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">createFolds</span>(</span>
+<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a>    training_data[[target_column_name]],</span>
+<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">k =</span> cv_folds,</span>
+<span id="cb48-18"><a href="#cb48-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">list =</span> <span class="cn">TRUE</span></span>
+<span id="cb48-19"><a href="#cb48-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb48-20"><a href="#cb48-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-21"><a href="#cb48-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Initializing vector to store accuracy after each fold</span></span>
+<span id="cb48-22"><a href="#cb48-22" aria-hidden="true" tabindex="-1"></a>  fold_accuracy <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(folds))</span>
+<span id="cb48-23"><a href="#cb48-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-24"><a href="#cb48-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(folds)) {</span>
+<span id="cb48-25"><a href="#cb48-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-26"><a href="#cb48-26" aria-hidden="true" tabindex="-1"></a>    valid_index <span class="ot">&lt;-</span> folds[[i]]</span>
+<span id="cb48-27"><a href="#cb48-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-28"><a href="#cb48-28" aria-hidden="true" tabindex="-1"></a>    cv_train <span class="ot">&lt;-</span> training_data[<span class="sc">-</span>valid_index, ]</span>
+<span id="cb48-29"><a href="#cb48-29" aria-hidden="true" tabindex="-1"></a>    cv_valid <span class="ot">&lt;-</span> training_data[valid_index, ]</span>
+<span id="cb48-30"><a href="#cb48-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-31"><a href="#cb48-31" aria-hidden="true" tabindex="-1"></a>    cv_model <span class="ot">&lt;-</span> mda<span class="sc">::</span><span class="fu">fda</span>(formula, <span class="at">data =</span> cv_train)</span>
+<span id="cb48-32"><a href="#cb48-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-33"><a href="#cb48-33" aria-hidden="true" tabindex="-1"></a>    cv_predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(cv_model, <span class="at">newdata =</span> cv_valid)</span>
+<span id="cb48-34"><a href="#cb48-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-35"><a href="#cb48-35" aria-hidden="true" tabindex="-1"></a>    fold_accuracy[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb48-36"><a href="#cb48-36" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.factor</span>(cv_predictions) <span class="sc">==</span> cv_valid[[target_column_name]]</span>
+<span id="cb48-37"><a href="#cb48-37" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb48-38"><a href="#cb48-38" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb48-39"><a href="#cb48-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-40"><a href="#cb48-40" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Computing average cross-validation accuracy across all folds</span></span>
+<span id="cb48-41"><a href="#cb48-41" aria-hidden="true" tabindex="-1"></a>  cv_accuracy <span class="ot">&lt;-</span> <span class="fu">mean</span>(fold_accuracy)</span>
+<span id="cb48-42"><a href="#cb48-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-43"><a href="#cb48-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Predict on test data</span></span>
+<span id="cb48-44"><a href="#cb48-44" aria-hidden="true" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> test_data)</span>
+<span id="cb48-45"><a href="#cb48-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-46"><a href="#cb48-46" aria-hidden="true" tabindex="-1"></a>  confusion_matrix <span class="ot">&lt;-</span> caret<span class="sc">::</span><span class="fu">confusionMatrix</span>(</span>
+<span id="cb48-47"><a href="#cb48-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">as.factor</span>(predictions),</span>
+<span id="cb48-48"><a href="#cb48-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">reference =</span> test_data[[target_column_name]]</span>
+<span id="cb48-49"><a href="#cb48-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb48-50"><a href="#cb48-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-51"><a href="#cb48-51" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extracting overall test accuracy</span></span>
+<span id="cb48-52"><a href="#cb48-52" aria-hidden="true" tabindex="-1"></a>  accuracy <span class="ot">&lt;-</span> confusion_matrix<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span>
+<span id="cb48-53"><a href="#cb48-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-54"><a href="#cb48-54" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Returning relevant samples</span></span>
+<span id="cb48-55"><a href="#cb48-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb48-56"><a href="#cb48-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> model,</span>
+<span id="cb48-57"><a href="#cb48-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">predictions =</span> predictions,</span>
+<span id="cb48-58"><a href="#cb48-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">confusion_matrix =</span> confusion_matrix,</span>
+<span id="cb48-59"><a href="#cb48-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">accuracy =</span> accuracy,</span>
+<span id="cb48-60"><a href="#cb48-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_accuracy =</span> cv_accuracy,</span>
+<span id="cb48-61"><a href="#cb48-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">cv_fold_accuracy =</span> fold_accuracy</span>
+<span id="cb48-62"><a href="#cb48-62" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb48-63"><a href="#cb48-63" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong><em>Note:</em></strong> <strong>Unlike LDA, QDA and FDA use higher-dimensional, non-linear boundaries that cannot be accurately represented in a 2D discriminant plot. Thus, code was not created for these complex models.</strong></p>
+<p>This is an example of how to run the FDA function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fda_results <span class="ot">&lt;-</span> <span class="fu">run_fda_model</span>(training_and_test_data<span class="sc">$</span>training_data,training_and_test_data<span class="sc">$</span>test_data,<span class="st">"genre_group"</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>fda_results<span class="sc">$</span>accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Accuracy 
+0.7048889 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>fda_results<span class="sc">$</span>cv_accuracy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7047619</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fda_results$confusion_matrix</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fda_results$model</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fda_results$predictions</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co"># fda_results$predictions$class</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>The FDA model achieved a ~71% accuracy, similar to LDA. This indicates that adding non-linear flexibility does not significantly improve performance, suggesting that the relationship between audio features and their respective genre groups is largely linear.</strong></p>
+<p>Since FDA adds significant computational complexity without a gain in predictive accuracy, the LDA model remains the most efficient for our analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_confusion_matrix</span>(fda_results<span class="sc">$</span>confusion_matrix, <span class="at">title =</span> <span class="st">"FDA Confusion Matrix"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>plot_fda_boundary <span class="ot">&lt;-</span> <span class="cf">function</span>(fda_result, training_data, target_column_name,</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>                              x_feature, y_feature) {</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> fda_result<span class="sc">$</span>model</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">seq</span>(<span class="fu">min</span>(training_data[[x_feature]]), <span class="fu">max</span>(training_data[[x_feature]]), <span class="at">length.out =</span> <span class="dv">200</span>),</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">seq</span>(<span class="fu">min</span>(training_data[[y_feature]]), <span class="fu">max</span>(training_data[[y_feature]]), <span class="at">length.out =</span> <span class="dv">200</span>)</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(grid) <span class="ot">&lt;-</span> <span class="fu">c</span>(x_feature, y_feature)</span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>  predictor_names <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(training_data), target_column_name)</span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>  other_features <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(predictor_names, <span class="fu">c</span>(x_feature, y_feature))</span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (feature <span class="cf">in</span> other_features) {</span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>    grid[[feature]] <span class="ot">&lt;-</span> <span class="fu">mean</span>(training_data[[feature]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-20"><a href="#cb55-20" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> grid[, predictor_names]</span>
+<span id="cb55-21"><a href="#cb55-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-22"><a href="#cb55-22" aria-hidden="true" tabindex="-1"></a>  grid<span class="sc">$</span>predicted_class <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, <span class="at">newdata =</span> grid)</span>
+<span id="cb55-23"><a href="#cb55-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb55-24"><a href="#cb55-24" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb55-25"><a href="#cb55-25" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_tile</span>(</span>
+<span id="cb55-26"><a href="#cb55-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> grid,</span>
+<span id="cb55-27"><a href="#cb55-27" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb55-28"><a href="#cb55-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> .data[[x_feature]],</span>
+<span id="cb55-29"><a href="#cb55-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> .data[[y_feature]],</span>
+<span id="cb55-30"><a href="#cb55-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">fill =</span> predicted_class</span>
+<span id="cb55-31"><a href="#cb55-31" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb55-32"><a href="#cb55-32" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.25</span></span>
+<span id="cb55-33"><a href="#cb55-33" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb55-34"><a href="#cb55-34" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_point</span>(</span>
+<span id="cb55-35"><a href="#cb55-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> training_data,</span>
+<span id="cb55-36"><a href="#cb55-36" aria-hidden="true" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb55-37"><a href="#cb55-37" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> .data[[x_feature]],</span>
+<span id="cb55-38"><a href="#cb55-38" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> .data[[y_feature]],</span>
+<span id="cb55-39"><a href="#cb55-39" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> .data[[target_column_name]]</span>
+<span id="cb55-40"><a href="#cb55-40" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb55-41"><a href="#cb55-41" aria-hidden="true" tabindex="-1"></a>      <span class="at">size =</span> <span class="fl">0.7</span>,</span>
+<span id="cb55-42"><a href="#cb55-42" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.6</span></span>
+<span id="cb55-43"><a href="#cb55-43" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb55-44"><a href="#cb55-44" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb55-45"><a href="#cb55-45" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb55-46"><a href="#cb55-46" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="st">"FDA Decision Boundaries"</span>,</span>
+<span id="cb55-47"><a href="#cb55-47" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="fu">paste</span>(x_feature, <span class="st">"vs"</span>, y_feature),</span>
+<span id="cb55-48"><a href="#cb55-48" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> x_feature,</span>
+<span id="cb55-49"><a href="#cb55-49" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> y_feature,</span>
+<span id="cb55-50"><a href="#cb55-50" aria-hidden="true" tabindex="-1"></a>      <span class="at">fill =</span> <span class="st">"Predicted Class"</span>,</span>
+<span id="cb55-51"><a href="#cb55-51" aria-hidden="true" tabindex="-1"></a>      <span class="at">color =</span> <span class="st">"Actual Class"</span></span>
+<span id="cb55-52"><a href="#cb55-52" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb55-53"><a href="#cb55-53" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>fda_plot <span class="ot">&lt;-</span> <span class="fu">plot_fda_boundary</span>(</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">fda_result =</span> fda_results,</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">training_data =</span> training_and_test_data<span class="sc">$</span>training_data,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_column_name =</span> <span class="st">"genre_group"</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_feature =</span> <span class="st">"energy"</span>,</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">y_feature =</span> <span class="st">"acousticness"</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>fda_plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="DFATools_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="model-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="model-comparison">11. Model comparison</h3>
+<p>To conclude the analysis, the classification performance of the three models (LDA, QDA, and FDA) are compared. This comparison is essential to determine whether our dataset is best captured by linear, quadratic, or flexible, non-linear boundaries</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating data frame for model comparison results</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Model =</span> <span class="fu">c</span>(<span class="st">"LDA"</span>,<span class="st">"QDA"</span>,<span class="st">"FDA"</span>),</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Accuracy =</span> <span class="fu">c</span>(</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(lda_results<span class="sc">$</span>accuracy,<span class="dv">4</span>),</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(qda_results<span class="sc">$</span>accuracy,<span class="dv">4</span>),</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(fda_results<span class="sc">$</span>accuracy,<span class="dv">4</span>)</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Model</th>
+<th style="text-align: right;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LDA</td>
+<td style="text-align: right;">0.7049</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">QDA</td>
+<td style="text-align: right;">0.6691</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FDA</td>
+<td style="text-align: right;">0.7049</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The results highlight differences in model flexibility: LDA provides stable and interpretable results but may struggle with overlapping classes. QDA improves flexibility by modeling class-specific covariance, which can better capture nonlinear boundaries. FDA allows even more complex relationships but may introduce overfitting and reduce interpretability. In this analysis, increased flexibility does not always guarantee improved performance, emphasizing the importance of balancing model complexity and generalization.</p>
+</section>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>This analysis demonstrates that music genres can be classified with moderate accuracy (~71%) using Spotify’s audio metadata, confirming that genres possess distinct and quantifiable characteristics.</p>
+<p>Statistical testing (MANOVA) showed that these differences are highly significant, supporting the use for classification. The primary drivers of genre separation were <code>acousticness</code>, <code>energy</code>, and <code>danceability</code> based on the features selected from the original dataset. Although the model showed clear separation between the groupings, the overlap between them suggest a continuum in music where stylistic features transcend traditional genre boundaries.</p>
+<p>Overall, the {DFAtools} package provides a structured workflow for multivariate classification. By comparing linear and non-linear boundaries, the package identifies the optimal fit for the user’s data. While the accuracy is dictated by the separability of the input variables, the visualizations (confusion matrix heatmaps and discriminant plots) allow the users to determine whether their groups intersect. This musical analysis supports the use of {DFAtools} for transforming raw multivariate data into interpretable, statistically significant group profiling.</p>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<p>While the models from {DFAtools} provide a framework for classification, there are several factors that may constrain interpretation of these results.</p>
+<ul>
+<li><p><strong>First, the performance accuracy (~70%) is a reflection of an overlap between groups in the multivariate space.</strong></p></li>
+<li><p><strong>Any dataset where categories exist on a continuum (i.e, music genres or biological phenotypes) will naturally have intersections at group boundaries that linear or quadratic functions cannot fully resolve.</strong></p></li>
+<li><p><strong>Additionally, while the feature importance rankings provided valuable insight, they indicate a statistical association rather than a causal relationship.</strong></p></li>
+<li><p><strong>Users should interpret these results as a measure of group distinctiveness and variable contribution within their dataset, rather than universal rules for the categories.</strong></p></li>
+</ul>
+</section>
+<section id="how-to-use-the-dfatools-package" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-use-the-dfatools-package">How to use the DFATools package</h2>
+<p>The {DFAtools} package provides a pipeline to transform raw multivariate data into a validated classification model.</p>
+<ol type="1">
+<li>Data Structuring: Format your dataset to have numeric predictor variables and a categorical target response variable (the groups you want to classify). It is recommended that data be scaled, centered, and split into training and testing sets to validate model accuracy.</li>
+<li>Model Selection: After fitting and evaluating your models, use the accuracy scores from the performance assesment to select the final model.
+<ul>
+<li><p>Select LDA if accuracy is relatively the same across all models, as this suggests a largely linear relationship between variables.</p></li>
+<li><p>Select QDA or FDA models if they provide a significant increase in accuracy (&gt; ~2%) over LDA. If accuracy decreases with these complex models, it may be a sign of overfitting.</p></li>
+</ul></li>
+<li>Visual Interpretation: Use the built-in visualization tools to explain results.
+<ul>
+<li><p>Discriminant Plots: Visualize how groups cluster in a multivariate space.</p></li>
+<li><p>Feature Importance Tables: Identifies which variables are primary drivers in separating your groups.</p></li>
+<li><p>Error Heatmaps: Identifies specific categories frequently confused with others to show model weaknesses.</p></li>
+</ul></li>
+</ol>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>1) Bond, B. (2025, August 20).&nbsp;<em>Music genres</em>. Mood Media.&nbsp;<a href="https://us.moodmedia.com/blog/music-genres/" class="uri">https://us.moodmedia.com/blog/music-genres/</a></p>
+<p>2) Rogers, J. K. B. (n.d.).&nbsp;<em>Discriminant Function Analysis: A Supervised Classification Technique</em>. RPubs.&nbsp;<a href="https://rpubs.com/thedatasamurai/dfa" class="uri">https://rpubs.com/thedatasamurai/dfa</a></p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
